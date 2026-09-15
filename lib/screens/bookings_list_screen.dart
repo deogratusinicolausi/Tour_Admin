@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/booking_model.dart';
@@ -46,7 +47,22 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
       );
       _loadStats();
     }
+    // ⭐️ Send notification to user
+    await FirebaseFirestore.instance.collection('notifications').add({
+      'userId': b.userId,
+      'title': '✅ Booking Confirmed!',
+      'body': 'Your booking for "${b.itemName}" has been confirmed.',
+      'type': 'booking',
+      'category': 'success',
+      'icon': '✅',
+      'actionType': 'open_booking',
+      'actionId': b.id,
+      'isRead': false,
+      'isPushed': false,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
+
 
   Future<void> _cancelBooking(BookingModel b) async {
     final confirm = await showDialog<bool>(

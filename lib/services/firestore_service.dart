@@ -6,6 +6,10 @@ import '../models/activity_model.dart';
 import '../models/deal_model.dart';
 import '../models/booking_model.dart';
 import '../models/user_model.dart';
+import '../models/beach_model.dart';
+import '../models/mountain_model.dart';
+import '../models/culture_model.dart';
+import '../models/food_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -52,6 +56,265 @@ class FirestoreService {
     } catch (e) {
       print('🔥 Error adding tour: $e');
       return null;
+    }
+  }
+
+
+  // ⭐️ ===== BEACHES CRUD =====
+
+  Future<String?> addBeach(BeachModel beach) async {
+    try {
+      DocumentReference ref =
+      await _firestore.collection('beaches').add(beach.toMap());
+      return ref.id;
+    } catch (e) {
+      print('🔥 Error adding beach: $e');
+      return null;
+    }
+  }
+
+  Stream<List<BeachModel>> getBeaches() {
+    return _firestore
+        .collection('beaches')
+        .snapshots()
+        .map((snapshot) {
+      final list = snapshot.docs
+          .map((doc) => BeachModel.fromMap(doc.data(), doc.id))
+          .toList();
+      list.sort((a, b) {
+        final aDate = a.createdAt ?? DateTime(2000);
+        final bDate = b.createdAt ?? DateTime(2000);
+        return bDate.compareTo(aDate);
+      });
+      return list;
+    });
+  }
+
+  Future<bool> updateBeach(BeachModel beach) async {
+    try {
+      await _firestore
+          .collection('beaches')
+          .doc(beach.id)
+          .update(beach.toMap());
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteBeach(String id) async {
+    try {
+      await _firestore.collection('beaches').doc(id).delete();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> toggleBeachFeatured(String id, bool featured) async {
+    try {
+      await _firestore.collection('beaches').doc(id).update({
+        'featured': featured,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+
+
+  // ⭐️ ===== MOUNTAINS CRUD =====
+
+  Future<String?> addMountain(MountainModel mountain) async {
+    try {
+      DocumentReference ref =
+      await _firestore.collection('mountains').add(mountain.toMap());
+      return ref.id;
+    } catch (e) {
+      print('🔥 Error adding mountain: $e');
+      return null;
+    }
+  }
+
+  Stream<List<MountainModel>> getMountains() {
+    return _firestore
+        .collection('mountains')
+        .snapshots()
+        .map((snapshot) {
+      final list = snapshot.docs
+          .map((doc) => MountainModel.fromMap(doc.data(), doc.id))
+          .toList();
+      list.sort((a, b) {
+        final aDate = a.createdAt ?? DateTime(2000);
+        final bDate = b.createdAt ?? DateTime(2000);
+        return bDate.compareTo(aDate);
+      });
+      return list;
+    });
+  }
+
+  Future<bool> updateMountain(MountainModel mountain) async {
+    try {
+      await _firestore
+          .collection('mountains')
+          .doc(mountain.id)
+          .update(mountain.toMap());
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteMountain(String id) async {
+    try {
+      await _firestore.collection('mountains').doc(id).delete();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> toggleMountainFeatured(String id, bool featured) async {
+    try {
+      await _firestore.collection('mountains').doc(id).update({
+        'featured': featured,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+
+
+  // ⭐️ ===== CULTURE CRUD =====
+
+  Future<String?> addCulture(CultureModel culture) async {
+    try {
+      DocumentReference ref =
+      await _firestore.collection('culture').add(culture.toMap());
+      return ref.id;
+    } catch (e) {
+      print('🔥 Error adding culture: $e');
+      return null;
+    }
+  }
+
+  Stream<List<CultureModel>> getCulture() {
+    return _firestore
+        .collection('culture')
+        .snapshots()
+        .map((snapshot) {
+      final list = snapshot.docs
+          .map((doc) => CultureModel.fromMap(doc.data(), doc.id))
+          .toList();
+      list.sort((a, b) {
+        final aDate = a.createdAt ?? DateTime(2000);
+        final bDate = b.createdAt ?? DateTime(2000);
+        return bDate.compareTo(aDate);
+      });
+      return list;
+    });
+  }
+
+  Future<bool> updateCulture(CultureModel culture) async {
+    try {
+      await _firestore
+          .collection('culture')
+          .doc(culture.id)
+          .update(culture.toMap());
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteCulture(String id) async {
+    try {
+      await _firestore.collection('culture').doc(id).delete();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> toggleCultureFeatured(String id, bool featured) async {
+    try {
+      await _firestore.collection('culture').doc(id).update({
+        'featured': featured,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+
+
+  // ⭐️ ===== FOOD CRUD =====
+
+  Future<String?> addFood(FoodModel food) async {
+    try {
+      DocumentReference ref =
+      await _firestore.collection('food').add(food.toMap());
+      return ref.id;
+    } catch (e) {
+      print('🔥 Error adding food: $e');
+      return null;
+    }
+  }
+
+  Stream<List<FoodModel>> getFood() {
+    return _firestore
+        .collection('food')
+        .snapshots()
+        .map((snapshot) {
+      final list = snapshot.docs
+          .map((doc) => FoodModel.fromMap(doc.data(), doc.id))
+          .toList();
+      list.sort((a, b) {
+        final aDate = a.createdAt ?? DateTime(2000);
+        final bDate = b.createdAt ?? DateTime(2000);
+        return bDate.compareTo(aDate);
+      });
+      return list;
+    });
+  }
+
+  Future<bool> updateFood(FoodModel food) async {
+    try {
+      await _firestore
+          .collection('food')
+          .doc(food.id)
+          .update(food.toMap());
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteFood(String id) async {
+    try {
+      await _firestore.collection('food').doc(id).delete();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> toggleFoodFeatured(String id, bool featured) async {
+    try {
+      await _firestore.collection('food').doc(id).update({
+        'featured': featured,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 

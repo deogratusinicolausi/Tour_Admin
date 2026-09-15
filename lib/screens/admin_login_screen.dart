@@ -33,11 +33,9 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       );
 
       if (user != null) {
-        // ⭐ Check role
         String? role = await _auth.getUserRole(user.uid);
 
         if (role == 'admin' || role == 'superAdmin') {
-          // ✅ Authorized
           if (mounted) {
             Navigator.pushReplacement(
               context,
@@ -45,7 +43,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
             );
           }
         } else {
-          // ❌ Not authorized
           await _auth.logout();
           _showError('Access denied. Admin only.');
         }
@@ -66,130 +63,179 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      // ⭐ No white space
+      backgroundColor: AppColors.primary,
+      resizeToAvoidBottomInset: true,
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(gradient: AppColors.mainGradient),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(width * 0.06),
-            child: Column(
-              children: [
-                SizedBox(height: width * 0.15),
-                // Logo
-                Container(
-                  width: width * 0.25,
-                  height: width * 0.25,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.accentGold.withOpacity(0.5),
-                        blurRadius: 30,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: IntrinsicHeight(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: width * 0.06,
+                        vertical: height * 0.03,
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.admin_panel_settings,
-                    size: width * 0.15,
-                    color: AppColors.primary,
-                  ),
-                ),
-                SizedBox(height: width * 0.06),
-                Text(
-                  'TURIVA ADMIN',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: width * 0.08,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
-                  ),
-                ),
-                Text(
-                  'Management Portal',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: width * 0.04,
-                  ),
-                ),
-                SizedBox(height: width * 0.1),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // ⭐ Space above (kama screen ni kubwa)
+                          const Spacer(),
 
-                // Email
-                TextField(
-                  controller: _emailController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Admin Email',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    prefixIcon: const Icon(Icons.email, color: Colors.white70),
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.1),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                SizedBox(height: width * 0.04),
+                          // ⭐ Logo
+                          Container(
+                            width: width * 0.25,
+                            height: width * 0.25,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                  AppColors.accentGold.withOpacity(0.5),
+                                  blurRadius: 30,
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.admin_panel_settings,
+                              size: width * 0.15,
+                              color: AppColors.primary,
+                            ),
+                          ),
 
-                // Password
-                TextField(
-                  controller: _passwordController,
-                  obscureText: _obscure,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    prefixIcon: const Icon(Icons.lock, color: Colors.white70),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscure ? Icons.visibility_off : Icons.visibility,
-                        color: Colors.white70,
-                      ),
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.1),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                SizedBox(height: width * 0.08),
+                          SizedBox(height: height * 0.025),
 
-                // Login Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accentGold,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                      'LOGIN',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                          // ⭐ Title
+                          Text(
+                            'TURIVA ADMIN',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: width * 0.08,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          SizedBox(height: height * 0.005),
+                          Text(
+                            'Management Portal',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: width * 0.04,
+                            ),
+                          ),
+
+                          SizedBox(height: height * 0.04),
+
+                          // ⭐ Email
+                          TextField(
+                            controller: _emailController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: 'Admin Email',
+                              labelStyle:
+                              const TextStyle(color: Colors.white70),
+                              prefixIcon: const Icon(Icons.email,
+                                  color: Colors.white70),
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(0.1),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: height * 0.02),
+
+                          // ⭐ Password
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: _obscure,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              labelStyle:
+                              const TextStyle(color: Colors.white70),
+                              prefixIcon: const Icon(Icons.lock,
+                                  color: Colors.white70),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscure
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: Colors.white70,
+                                ),
+                                onPressed: () =>
+                                    setState(() => _obscure = !_obscure),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(0.1),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: height * 0.04),
+
+                          // ⭐ Login Button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _login,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.accentGold,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: _isLoading
+                                  ? const CircularProgressIndicator(
+                                  color: Colors.white)
+                                  : const Text(
+                                'LOGIN',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: height * 0.03),
+
+                          // ⭐ Bottom text
+                          Text(
+                            '🔒 Authorized Personnel Only',
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.5)),
+                          ),
+
+                          // ⭐ Space below
+                          const Spacer(),
+                        ],
                       ),
                     ),
                   ),
                 ),
-                SizedBox(height: width * 0.06),
-                Text(
-                  '🔒 Authorized Personnel Only',
-                  style: TextStyle(color: Colors.white.withOpacity(0.5)),
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),

@@ -26,6 +26,11 @@ class DashboardService {
         getCount('tours'),
         getCount('activities'),
         getCount('deals'),
+        getCount('beaches'),  // ⭐ ONGEZA
+        getCount('mountains'),  // ⭐ ONGEZA
+        getCount('culture'),  // ⭐ ONGEZA
+        getCount('food'),  // ⭐ ONGEZA
+        getCount('reviews'),  // ⭐ ONGEZA
       ]);
 
       return {
@@ -36,6 +41,11 @@ class DashboardService {
         'tours': results[4],
         'activities': results[5],
         'deals': results[6],
+        'beaches': results[7],  // ⭐ ONGEZA
+        'mountains': results[8],  // ⭐ ONGEZA
+        'culture': results[9],  // ⭐ ONGEZA
+        'food': results[10],  // ⭐ ONGEZA
+        'reviews': results[11],  // ⭐ ONGEZA
       };
     } catch (e) {
       print('🔥 Error getting stats: $e');

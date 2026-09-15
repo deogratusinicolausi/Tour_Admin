@@ -7,14 +7,27 @@ import 'destinations_list_screen.dart';
 import 'hotels_list_screen.dart';
 import 'tours_list_screen.dart';
 import 'bookings_list_screen.dart';
-import 'users_list_screen.dart';
 import 'deals_list_screen.dart';
 import 'activities_list_screen.dart';
 import 'admin_profile_screen.dart';
 import '../widgets/analytics_widgets.dart';
 import 'global_search_screen.dart';
 import 'export_reports_screen.dart';
-
+import 'beaches_list_screen.dart';
+import 'mountains_list_screen.dart';
+import 'culture_list_screen.dart';
+import 'food_list_screen.dart';
+import 'admin_chats_list_screen.dart';
+import '../services/chat_service.dart';
+import 'admin_notifications_screen.dart';
+import '../services/admin_notification_service.dart';
+import 'admin_reviews_screen.dart';
+import 'admin_users_screen.dart';
+import 'admin_payments_screen.dart';
+import 'admin_analytics_screen.dart';
+import '../services/payment_service.dart';
+import 'admin_reviews_screen.dart';
+import '../services/review_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -41,6 +54,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadData();
+    // ⭐️ Listen for new chat messages
+    ChatService().listenForNewMessages();
+    // ⭐️ Listen for chat messages
+    ChatService().listenForNewMessages();
+    // ⭐️ Listen for new notifications
+    AdminNotificationService().listenForNewNotifications();
   }
 
   Future<void> _loadData() async {
@@ -105,74 +124,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
-          onRefresh: _loadData,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(width * 0.04),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ===== HEADER =====
-                _buildHeader(width, height),
-                SizedBox(height: height * 0.025),
+                onRefresh: _loadData,
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(width * 0.04),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ===== HEADER =====
+                      _buildHeader(width, height),
+                      SizedBox(height: height * 0.025),
 
-                // ===== STATS GRID =====
-                _buildSectionTitle('📊 Overview', width),
-                SizedBox(height: height * 0.015),
-                _buildStatsGrid(width, height),
-                SizedBox(height: height * 0.025),
+                      // ===== STATS GRID =====
+                      _buildSectionTitle('📊 Overview', width),
+                      SizedBox(height: height * 0.015),
+                      _buildStatsGrid(width, height),
+                      SizedBox(height: height * 0.025),
 
-                // ===== BOOKINGS STATUS =====
-                _buildSectionTitle('📅 Bookings Status', width),
-                SizedBox(height: height * 0.015),
-                _buildBookingStatus(width, height),
-                SizedBox(height: height * 0.025),
+                      // ===== BOOKINGS STATUS =====
+                      _buildSectionTitle('📅 Bookings Status', width),
+                      SizedBox(height: height * 0.015),
+                      _buildBookingStatus(width, height),
+                      SizedBox(height: height * 0.025),
 
-                // ===== QUICK ACTIONS =====
-                _buildSectionTitle('🚀 Quick Actions', width),
-                SizedBox(height: height * 0.015),
-                _buildQuickActions(width, height),
-                SizedBox(height: height * 0.025),
+                      // ===== QUICK ACTIONS =====
+                      _buildSectionTitle('🚀 Quick Actions', width),
+                      SizedBox(height: height * 0.015),
+                      _buildQuickActions(width, height),
+                      SizedBox(height: height * 0.025),
 
-                // ===== MANAGEMENT =====
-                _buildSectionTitle('📋 Management', width),
-                SizedBox(height: height * 0.015),
-                _buildManagementList(width, height),
-                SizedBox(height: height * 0.025),
-                // ===== ANALYTICS =====
-                _buildSectionTitle('📈 Analytics', width),
-                SizedBox(height: height * 0.015),
+                      // ===== MANAGEMENT =====
+                      _buildSectionTitle('📋 Management', width),
+                      SizedBox(height: height * 0.015),
+                      _buildManagementList(width, height),
+                      SizedBox(height: height * 0.025),
+                      // ===== ANALYTICS =====
+                      _buildSectionTitle('📈 Analytics', width),
+                      SizedBox(height: height * 0.015),
 
-                _buildBookingsChart(width, height),
-                SizedBox(height: height * 0.025),
+                      _buildBookingsChart(width, height),
+                      SizedBox(height: height * 0.025),
 
-                _buildSectionTitle('💰 Revenue (Last 6 Months)', width),
-                SizedBox(height: height * 0.015),
-                _buildRevenueChart(width, height),
-                SizedBox(height: height * 0.025),
+                      _buildSectionTitle('💰 Revenue (Last 6 Months)', width),
+                      SizedBox(height: height * 0.015),
+                      _buildRevenueChart(width, height),
+                      SizedBox(height: height * 0.025),
 
-                _buildSectionTitle('🎯 Booking Types', width),
-                SizedBox(height: height * 0.015),
-                _buildItemTypeChart(width, height),
-                SizedBox(height: height * 0.025),
+                      _buildSectionTitle('🎯 Booking Types', width),
+                      SizedBox(height: height * 0.015),
+                      _buildItemTypeChart(width, height),
+                      SizedBox(height: height * 0.025),
 
-// ===== RECENT BOOKINGS =====
-                _buildSectionTitle('🔔 Recent Bookings', width),
-                SizedBox(height: height * 0.015),
-                _buildRecentBookings(width, height),
-                SizedBox(height: height * 0.02),
-                // ===== RECENT BOOKINGS =====
-                _buildSectionTitle('🔔 Recent Bookings', width),
-                SizedBox(height: height * 0.015),
-                _buildRecentBookings(width, height),
-                SizedBox(height: height * 0.02),
-              ],
-            ),
-          ),
-        ),
+                      // ===== RECENT BOOKINGS =====
+                      _buildSectionTitle('🔔 Recent Bookings', width),
+                      SizedBox(height: height * 0.015),
+                      _buildRecentBookings(width, height),
+                      SizedBox(height: height * 0.02),
+                      // ===== RECENT BOOKINGS =====
+                      _buildSectionTitle('🔔 Recent Bookings', width),
+                      SizedBox(height: height * 0.015),
+                      _buildRecentBookings(width, height),
+                      SizedBox(height: height * 0.02),
+                    ],
+                  ),
+                ),
+              ),
       ),
     );
-
-
   }
 
   Widget _buildBookingsChart(double width, double height) {
@@ -201,22 +218,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: AppColors.accentGold.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.trending_up,
-                    color: AppColors.accentGold, size: width * 0.05),
+                child: Icon(
+                  Icons.trending_up,
+                  color: AppColors.accentGold,
+                  size: width * 0.05,
+                ),
               ),
               SizedBox(width: width * 0.03),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Last 7 Days',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: width * 0.038,
-                          color: Colors.grey.shade800)),
-                  Text('Bookings trend',
-                      style: TextStyle(
-                          fontSize: width * 0.028,
-                          color: Colors.grey.shade500)),
+                  Text(
+                    'Last 7 Days',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: width * 0.038,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  Text(
+                    'Bookings trend',
+                    style: TextStyle(
+                      fontSize: width * 0.028,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -254,22 +280,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: AppColors.primary.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.attach_money,
-                    color: AppColors.primary, size: width * 0.05),
+                child: Icon(
+                  Icons.attach_money,
+                  color: AppColors.primary,
+                  size: width * 0.05,
+                ),
               ),
               SizedBox(width: width * 0.03),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Monthly Revenue',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: width * 0.038,
-                          color: Colors.grey.shade800)),
-                  Text('Last 6 months',
-                      style: TextStyle(
-                          fontSize: width * 0.028,
-                          color: Colors.grey.shade500)),
+                  Text(
+                    'Monthly Revenue',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: width * 0.038,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  Text(
+                    'Last 6 months',
+                    style: TextStyle(
+                      fontSize: width * 0.028,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -299,7 +334,94 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: ItemTypePieChart(data: _itemTypeDistribution),
     );
   }
+
   Widget _buildHeader(double width, double height) {
+    StreamBuilder<int>(
+      stream: ChatService().getTotalUnread(),
+      builder: (context, snapshot) {
+        // ⭐️ Notifications Bell
+        StreamBuilder<int>(
+          stream: AdminNotificationService().getUnreadCount(),
+          builder: (context, snapshot) {
+            final unread = snapshot.data ?? 0;
+            return Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.notifications_outlined,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AdminNotificationsScreen(),
+                      ),
+                    ).then((_) => _loadData());
+                  },
+                ),
+                if (unread > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        unread > 99 ? '99+' : '$unread',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+        final unread = snapshot.data ?? 0;
+        return Stack(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AdminChatsListScreen(),
+                  ),
+                ).then((_) => _loadData());
+              },
+            ),
+            if (unread > 0)
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    unread > 99 ? '99+' : '$unread',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
     return Container(
       padding: EdgeInsets.all(width * 0.05),
       decoration: BoxDecoration(
@@ -396,7 +518,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.logout, color: Colors.white, size: width * 0.03),
+                      Icon(
+                        Icons.logout,
+                        color: Colors.white,
+                        size: width * 0.03,
+                      ),
                       SizedBox(width: width * 0.01),
                       Text(
                         'Logout',
@@ -414,10 +540,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-    );  }
+    );
+  }
 
   // ===== SECTION TITLE =====
-
 
   Widget _buildSectionTitle(String title, double width) {
     return Text(
@@ -622,6 +748,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final actions = [
       {'icon': '🔍', 'label': 'Search', 'screen': 'search'},
       {'icon': '📤', 'label': 'Reports', 'screen': 'reports'},
+      {'icon': '💰', 'label': 'Payments', 'screen': 'payments'}, // ⭐ ONGEZA
+      {'icon': '📊', 'label': 'Analytics', 'screen': 'analytics'}, // ⭐ ONGEZA
+      {'icon': '⭐', 'label': 'Reviews', 'screen': 'reviews'},     // ⭐ ONGEZA
       {'icon': '📍', 'label': 'Destination', 'screen': 'destinations'},
       {'icon': '🏨', 'label': 'Hotel', 'screen': 'hotels'},
       {'icon': '🦁', 'label': 'Tour', 'screen': 'tours'},
@@ -654,7 +783,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(action['icon']!, style: TextStyle(fontSize: width * 0.08)),
+                  Text(
+                    action['icon']!,
+                    style: TextStyle(fontSize: width * 0.08),
+                  ),
                   SizedBox(height: height * 0.005),
                   Text(
                     '+ ${action['label']}',
@@ -688,21 +820,110 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Add new $screen - Coming soon!')),
-    );
+    if (screen == 'payments') {
+      // ⭐ ONGEZA
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AdminPaymentsScreen()),
+      );
+      return;
+    }
+    if (screen == 'analytics') {
+      // ⭐ ONGEZA
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AdminAnalyticsScreen()),
+      );
+
+      if (screen == 'reviews') {  // ⭐ ONGEZA
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminReviewsScreen()));
+        return;
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Add new $screen - Coming soon!')));
+    }
   }
 
   // ===== MANAGEMENT LIST =====
   Widget _buildManagementList(double width, double height) {
     final items = [
-      {'icon': '📍', 'label': 'Destinations', 'color': const Color(0xFF4facfe), 'count': _stats['destinations'] ?? 0},
-      {'icon': '🏨', 'label': 'Hotels & Lodges', 'color': const Color(0xFF43e97b), 'count': _stats['hotels'] ?? 0},
-      {'icon': '🦁', 'label': 'Tours & Safaris', 'color': const Color(0xFFfa709a), 'count': _stats['tours'] ?? 0},
-      {'icon': '🎯', 'label': 'Activities', 'color': const Color(0xFFff9a9e), 'count': _stats['activities'] ?? 0},
-      {'icon': '🎁', 'label': 'Deals', 'color': const Color(0xFFf093fb), 'count': _stats['deals'] ?? 0},
-      {'icon': '📅', 'label': 'Bookings', 'color': const Color(0xFF667eea), 'count': _stats['bookings'] ?? 0},
-      {'icon': '👥', 'label': 'Users', 'color': const Color(0xFF38f9d7), 'count': _stats['users'] ?? 0},
+      {
+        'icon': '📍',
+        'label': 'Destinations',
+        'color': const Color(0xFF4facfe),
+        'count': _stats['destinations'] ?? 0,
+      },
+      {
+        'icon': '🏨',
+        'label': 'Hotels & Lodges',
+        'color': const Color(0xFF43e97b),
+        'count': _stats['hotels'] ?? 0,
+      },
+      {
+        'icon': '🦁',
+        'label': 'Tours & Safaris',
+        'color': const Color(0xFFfa709a),
+        'count': _stats['tours'] ?? 0,
+      },
+      {
+        'icon': '🏖️',
+        'label': 'Beaches',
+        'color': const Color(0xFF00bcd4),
+        'count': _stats['beaches'] ?? 0,
+      },
+      {
+        'icon': '🏔️',
+        'label': 'Mountains',
+        'color': const Color(0xFF795548),
+        'count': _stats['mountains'] ?? 0,
+      },
+      {
+        'icon': '🎭',
+        'label': 'Culture',
+        'color': const Color(0xFF9c27b0),
+        'count': _stats['culture'] ?? 0,
+      },
+      {
+        'icon': '🍛',
+        'label': 'Food',
+        'color': const Color(0xFFff5722),
+        'count': _stats['food'] ?? 0,
+      },
+      {
+        'icon': '🎯',
+        'label': 'Activities',
+        'color': const Color(0xFFff9a9e),
+        'count': _stats['activities'] ?? 0,
+      },
+      {
+        'icon': '🎁',
+        'label': 'Deals',
+        'color': const Color(0xFFf093fb),
+        'count': _stats['deals'] ?? 0,
+      },
+      {'icon': '⭐', 'label': 'Reviews', 'color': Colors.amber, 'count': _stats['reviews'] ?? 0},    // ⭐ ONGEZA
+      {
+        'icon': '⭐',
+        'label': 'Reviews',
+        'color': Colors.amber,
+        'count': _stats['reviews'] ?? 0,
+      },
+      {
+        'icon': '📅',
+        'label': 'Bookings',
+        'color': const Color(0xFF667eea),
+        'count': _stats['bookings'] ?? 0,
+      },
+      {
+        'icon': '👥',
+        'label': 'Users',
+        'color': const Color(0xFF38f9d7),
+        'count': _stats['users'] ?? 0,
+      },
+      {'icon': '💰', 'label': 'Payments', 'color': Colors.green, 'count': 0},
+      {'icon': '📊', 'label': 'Analytics', 'color': Colors.indigo, 'count': 0},
     ];
 
     return Column(
@@ -731,7 +952,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     color: (item['color'] as Color).withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(item['icon'] as String, style: TextStyle(fontSize: width * 0.05)),
+                  child: Text(
+                    item['icon'] as String,
+                    style: TextStyle(fontSize: width * 0.05),
+                  ),
                 ),
                 SizedBox(width: width * 0.03),
                 Expanded(
@@ -788,6 +1012,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 'Tours & Safaris':
         screen = const ToursListScreen();
         break;
+      case 'Beaches':
+        screen = const BeachesListScreen();
+        break;
+      case 'Mountains':
+        screen = const MountainsListScreen();
+        break;
+      case 'Culture':
+        screen = const CultureListScreen();
+        break;
+      case 'Food':
+        screen = const FoodListScreen();
+        break;
       case 'Activities':
         screen = const ActivitiesListScreen();
         break;
@@ -798,7 +1034,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
         screen = const BookingsListScreen();
         break;
       case 'Users':
-        screen = const UsersListScreen();
+        screen = const AdminUsersScreen();
+        break;
+      case 'Chats':
+        screen = const AdminChatsListScreen();
+        break;
+      case 'Notifications':
+        screen = const AdminNotificationsScreen();
+        break;
+      case 'Reviews':
+        screen = const AdminReviewsScreen();
+        break;
+      case 'Payments':
+        screen = const AdminPaymentsScreen();
+        break;
+      case 'Analytics':
+        screen = const AdminAnalyticsScreen();
         break;
     }
     if (screen != null) _navigateTo(screen);
@@ -816,7 +1067,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.inbox, size: width * 0.15, color: Colors.grey.shade300),
+              Icon(
+                Icons.inbox,
+                size: width * 0.15,
+                color: Colors.grey.shade300,
+              ),
               SizedBox(height: height * 0.01),
               Text(
                 'No bookings yet',
@@ -854,10 +1109,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 8,
-              ),
+              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8),
             ],
           ),
           child: Row(
@@ -906,6 +1158,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }).toList(),
     );
   }
-
-
 }

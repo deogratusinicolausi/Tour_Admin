@@ -49,11 +49,14 @@ dependencies:
 
   # File Picker
   file_picker: ^8.1.2
+  audioplayers: ^6.7.1
+  vibration: ^3.2.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -63,3 +66,9 @@ flutter:
     - assets/animations/
     - assets/icons/
     - assets/fonts/NotoSans-Regular.ttf
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/turiva_admin_icon.png"
+  min_sdk_android: 21
