@@ -3,6 +3,10 @@ import '../models/payment_model.dart';
 import '../services/payment_service.dart';
 import '../utils/colors.dart';
 import '../widgets/payment_card_widget.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import '../providers/app_theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class AdminPaymentsScreen extends StatefulWidget {
   const AdminPaymentsScreen({super.key});
@@ -59,8 +63,9 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-          Text(ok ? '✅ Payment approved!' : '❌ Failed to approve'),
+          content: Text(ok
+              ? context.tr('payment_approved')
+              : context.tr('failed_to_approve')),
           backgroundColor: ok ? Colors.green : Colors.red,
         ),
       );
@@ -74,18 +79,18 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('💰 Refund Payment?'),
+        title: Text('💰 ${context.tr('refund_payment')}?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-                'Refund ${payment.currency} ${payment.amount.toStringAsFixed(0)} to ${payment.userName}?'),
+                '${context.tr('refund')} ${payment.currency} ${payment.amount.toStringAsFixed(0)} ${context.tr('to')} ${payment.userName}?'),
             const SizedBox(height: 15),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Refund Reason',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('refund_reason'),
+                border: const OutlineInputBorder(),
               ),
               maxLines: 2,
             ),
@@ -94,12 +99,12 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.orange),
-            child: const Text('Refund'),
+            child: Text(context.tr('refund')),
           ),
         ],
       ),
@@ -114,8 +119,10 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ok ? '💰 Payment refunded!' : '❌ Failed'),
+            SnackBar(
+            content: Text(ok
+                ? context.tr('payment_refunded')
+                : context.tr('failed')),
             backgroundColor: ok ? Colors.orange : Colors.red,
           ),
         );
@@ -128,18 +135,18 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Payment?'),
+        title: Text(context.tr('delete_payment')),
         content: Text(
-            'Delete payment of ${payment.currency} ${payment.amount.toStringAsFixed(0)}?'),
+            '${context.tr('delete_payment_of')} ${payment.currency} ${payment.amount.toStringAsFixed(0)}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(context.tr('delete')),
           ),
         ],
       ),
@@ -157,9 +164,9 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('💰 Payments'),
+        title: Text('💰 ${context.tr('payments')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -174,7 +181,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
             color: AppColors.primary,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TextField(
@@ -182,7 +189,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                 onChanged: (v) =>
                     setState(() => _searchQuery = v.toLowerCase()),
                 decoration: InputDecoration(
-                  hintText: 'Search payments...',
+                  hintText: context.tr('search_payments'),
                   prefixIcon: const Icon(Icons.search),
                   border: InputBorder.none,
                   contentPadding:
@@ -226,7 +233,9 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: Text(
-                        status == 'all' ? '🔔 All' : status.toUpperCase(),
+                        status == 'all'
+                            ? '🔔 ${context.tr('all')}'
+                            : context.tr(status).toUpperCase(),
                         style: TextStyle(
                           color:
                           isSelected ? Colors.black : Colors.white70,
@@ -301,9 +310,9 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        '💰 TOTAL REVENUE',
-                        style: TextStyle(
+                      Text(
+                        '💰 ${context.tr('total_revenue').toUpperCase()}',
+                        style: const TextStyle(
                           color: Colors.black54,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -340,9 +349,9 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const Text(
-                        'Total',
-                        style: TextStyle(
+                      Text(
+                        context.tr('total'),
+                        style: const TextStyle(
                             color: Colors.white70, fontSize: 11),
                       ),
                     ],
@@ -355,13 +364,13 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
           // Sub stats
           Row(
             children: [
-              _subStat('✅', '${_stats['completed'] ?? 0}', 'Completed',
+              _subStat('✅', '${_stats['completed'] ?? 0}', context.tr('completed'),
                   Colors.green, width),
-              _subStat('⏳', '${_stats['pending'] ?? 0}', 'Pending',
+              _subStat('⏳', '${_stats['pending'] ?? 0}', context.tr('pending'),
                   Colors.orange, width),
-              _subStat('❌', '${_stats['failed'] ?? 0}', 'Failed',
+              _subStat('❌', '${_stats['failed'] ?? 0}', context.tr('failed'),
                   Colors.red, width),
-              _subStat('💰', '${_stats['refunded'] ?? 0}', 'Refunded',
+              _subStat('💰', '${_stats['refunded'] ?? 0}', context.tr('refunded'),
                   Colors.blue, width),
             ],
           ),
@@ -417,10 +426,10 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
               size: width * 0.2, color: Colors.grey.shade300),
           SizedBox(height: height * 0.02),
           Text(
-            'No payments found',
+            context.tr('no_payments_found'),
             style: TextStyle(
               fontSize: width * 0.05,
-              color: Colors.grey.shade600,
+              color: context.textSecondary,
               fontWeight: FontWeight.bold,
             ),
           ),

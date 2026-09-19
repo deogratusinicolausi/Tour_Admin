@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/activity_model.dart';
 import '../services/firestore_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
 import 'add_edit_activity_screen.dart';
 
 class ActivitiesListScreen extends StatefulWidget {
@@ -27,16 +29,16 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Activity?'),
-        content: Text('Are you sure you want to delete "${item.name}"?'),
+        title: Text(context.tr('delete_activity')),
+        content: Text('${context.tr('confirm_delete')} "${item.name}"?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(context.tr('cancel'))),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete')),
+              child: Text(context.tr('delete'))),
         ],
       ),
     );
@@ -45,7 +47,7 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(success ? '✅ Deleted' : '❌ Failed'),
+            content: Text(success ? '✅ ${context.tr('deleted')}' : '❌ ${context.tr('failed')}'),
             backgroundColor: success ? Colors.green : Colors.red,
           ),
         );
@@ -66,9 +68,9 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('🎯 Activities'),
+        title: Text('🎯 ${context.tr('activities')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -76,8 +78,8 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
         onPressed: () => _openAddEdit(),
         backgroundColor: AppColors.accentGold,
         icon: const Icon(Icons.add, color: Colors.black),
-        label: const Text('Add Activity',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        label: Text(context.tr('add_activity'),
+            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
       ),
       body: Column(
         children: [
@@ -88,14 +90,14 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
                     controller: _searchController,
                     onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
                     decoration: InputDecoration(
-                      hintText: 'Search activities...',
+                      hintText: context.tr('search_activities'),
                       prefixIcon: const Icon(Icons.search),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(vertical: height * 0.015),
@@ -113,10 +115,17 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
                 ),
                 SizedBox(height: height * 0.015),
                 Row(
-                  children: ['all', 'active', 'inactive'].map((status) {
+                  children: [
+                    {'id': 'all', 'label': context.tr('all')},
+                    {'id': 'active', 'label': context.tr('active')},
+                    {'id': 'inactive', 'label': context.tr('inactive')},
+                  ].map((statusMap) {
+                    final status = statusMap['id']!;
+                    final label = statusMap['label']!;
                     final isSelected = _filterStatus == status;
                     return GestureDetector(
-                      onTap: () => setState(() => _filterStatus = status),
+                      onTap: () =>
+                          setState(() => _filterStatus = status),
                       child: Container(
                         margin: EdgeInsets.only(right: width * 0.02),
                         padding: EdgeInsets.symmetric(
@@ -124,11 +133,11 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.accentGold
-                              : Colors.white.withOpacity(0.2),
+                              : context.cardBg.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          status.toUpperCase(),
+                          label.toUpperCase(),
                           style: TextStyle(
                             color: isSelected ? Colors.black : Colors.white,
                             fontWeight: FontWeight.bold,
@@ -183,10 +192,10 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
           Icon(Icons.celebration, size: width * 0.2, color: Colors.grey.shade300),
           const SizedBox(height: 20),
           Text(
-            _searchQuery.isEmpty ? 'No activities yet' : 'No results',
+            _searchQuery.isEmpty ? context.tr('no_activities') : context.tr('no_results'),
             style: TextStyle(
               fontSize: width * 0.05,
-              color: Colors.grey.shade600,
+              color: context.textSecondary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -199,7 +208,7 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: height * 0.015),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -278,12 +287,12 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
                         color: AppColors.accentGold,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.star, size: 14, color: Colors.black),
-                          SizedBox(width: 4),
-                          Text('FEATURED',
-                              style: TextStyle(
+                          const Icon(Icons.star, size: 14, color: Colors.black),
+                          const SizedBox(width: 4),
+                          Text(context.tr('feature').toUpperCase(),
+                              style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black)),
@@ -304,25 +313,25 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
                   style: TextStyle(
                     fontSize: width * 0.045,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                    color: context.textPrimary,
                   ),
                 ),
                 SizedBox(height: height * 0.005),
                 Row(
                   children: [
-                    Icon(Icons.location_on, size: width * 0.035, color: Colors.grey.shade500),
+                    Icon(Icons.location_on, size: width * 0.035, color: context.textSecondary),
                     SizedBox(width: width * 0.01),
                     Expanded(
                       child: Text(
                         item.destinationName,
-                        style: TextStyle(color: Colors.grey.shade500, fontSize: width * 0.03),
+                        style: TextStyle(color: context.textSecondary, fontSize: width * 0.03),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Icon(Icons.access_time, size: width * 0.035, color: Colors.grey.shade500),
+                    Icon(Icons.access_time, size: width * 0.035, color: context.textSecondary),
                     SizedBox(width: width * 0.01),
                     Text(item.duration,
-                        style: TextStyle(color: Colors.grey.shade500, fontSize: width * 0.03)),
+                        style: TextStyle(color: context.textSecondary, fontSize: width * 0.03)),
                   ],
                 ),
                 SizedBox(height: height * 0.015),
@@ -331,7 +340,7 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
                     Expanded(
                       child: _buildBtn(
                         icon: Icons.edit,
-                        label: 'Edit',
+                        label: context.tr('edit'),
                         color: Colors.blue,
                         onTap: () => _openAddEdit(item),
                         width: width,
@@ -341,7 +350,7 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
                     Expanded(
                       child: _buildBtn(
                         icon: item.featured ? Icons.star : Icons.star_border,
-                        label: item.featured ? 'Unfeature' : 'Feature',
+                        label: item.featured ? context.tr('unfeature') : context.tr('feature'),
                         color: AppColors.accentGold,
                         onTap: () async {
                           await _firestoreService.toggleActivityFeatured(
@@ -354,7 +363,7 @@ class _ActivitiesListScreenState extends State<ActivitiesListScreen> {
                     Expanded(
                       child: _buildBtn(
                         icon: Icons.delete,
-                        label: 'Delete',
+                        label: context.tr('delete'),
                         color: Colors.red,
                         onTap: () => _delete(item),
                         width: width,

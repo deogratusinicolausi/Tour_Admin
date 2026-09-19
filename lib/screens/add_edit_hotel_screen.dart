@@ -7,6 +7,10 @@ import '../models/hotel_model.dart';
 import '../services/firestore_service.dart';
 import '../services/cloudinary_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import '../providers/app_theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class AddEditHotelScreen extends StatefulWidget {
   final HotelModel? hotel;
@@ -232,9 +236,9 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: Text(isEditing ? '✏️ Edit Hotel' : '➕ Add Hotel'),
+        title: Text(isEditing ? '✏️ ${context.tr('edit_hotel')}' : '➕ ${context.tr('add_hotel')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -246,7 +250,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // MAIN IMAGE
-              _buildSectionTitle('📸 Main Image', width),
+              _buildSectionTitle('📸 ${context.tr('main_image')}', width),
               SizedBox(height: height * 0.01),
               GestureDetector(
                 onTap: _isUploading
@@ -256,7 +260,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                   height: height * 0.25,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _imageUrl.isEmpty
@@ -282,9 +286,9 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                           color: Colors.grey.shade400),
                       SizedBox(height: height * 0.01),
                       Text(
-                        'Tap to upload main image',
+                        context.tr('tap_to_upload_image'),
                         style:
-                        TextStyle(color: Colors.grey.shade600),
+                        TextStyle(color: context.textSecondary),
                       ),
                     ],
                   )
@@ -294,7 +298,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               SizedBox(height: height * 0.025),
 
               // GALLERY
-              _buildSectionTitle('🖼️ Gallery (Optional)', width),
+              _buildSectionTitle('🖼️ ${context.tr('gallery_optional')}', width),
               SizedBox(height: height * 0.01),
               SizedBox(
                 height: height * 0.12,
@@ -311,7 +315,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                           width: height * 0.12,
                           margin: EdgeInsets.only(right: width * 0.02),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.cardBg,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: Colors.grey.shade300),
                           ),
@@ -359,14 +363,14 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               SizedBox(height: height * 0.025),
 
               // BASIC INFO
-              _buildSectionTitle('📝 Basic Information', width),
+              _buildSectionTitle('📝 ${context.tr('basic_info')}', width),
               SizedBox(height: height * 0.01),
 
               _buildTextField(
                 controller: _nameController,
-                label: 'Hotel Name',
+                label: context.tr('hotel_name'),
                 icon: Icons.hotel,
-                validator: (v) => v!.isEmpty ? 'Name required' : null,
+                validator: (v) => v!.isEmpty ? context.tr('name_required') : null,
               ),
               SizedBox(height: height * 0.015),
 
@@ -374,10 +378,10 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               DropdownButtonFormField<String>(
                 value: _destinationId.isEmpty ? null : _destinationId,
                 decoration: InputDecoration(
-                  labelText: 'Destination',
+                  labelText: context.tr('destination'),
                   prefixIcon: const Icon(Icons.place),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.cardBg,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -404,21 +408,21 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
 
               _buildTextField(
                 controller: _locationController,
-                label: 'Location',
+                label: context.tr('location'),
                 icon: Icons.location_on,
               ),
               SizedBox(height: height * 0.015),
 
               _buildTextField(
                 controller: _descriptionController,
-                label: 'Description',
+                label: context.tr('description'),
                 icon: Icons.description,
                 maxLines: 4,
               ),
               SizedBox(height: height * 0.025),
 
               // PRICE
-              _buildSectionTitle('💰 Pricing', width),
+              _buildSectionTitle('💰 ${context.tr('pricing')}', width),
               SizedBox(height: height * 0.01),
               Row(
                 children: [
@@ -426,10 +430,10 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                     flex: 2,
                     child: _buildTextField(
                       controller: _priceController,
-                      label: 'Price From',
+                      label: context.tr('price_from'),
                       icon: Icons.attach_money,
                       keyboardType: TextInputType.number,
-                      validator: (v) => v!.isEmpty ? 'Price required' : null,
+                      validator: (v) => v!.isEmpty ? context.tr('price_required') : null,
                     ),
                   ),
                   SizedBox(width: width * 0.03),
@@ -438,7 +442,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                       padding: EdgeInsets.symmetric(
                           horizontal: width * 0.03, vertical: height * 0.02),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.cardBg,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.grey.shade300),
                       ),
@@ -462,12 +466,12 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               SizedBox(height: height * 0.025),
 
               // FACILITIES
-              _buildSectionTitle('🏨 Facilities', width),
+              _buildSectionTitle('🏨 ${context.tr('facilities')}', width),
               SizedBox(height: height * 0.01),
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Wrap(
@@ -527,37 +531,37 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               SizedBox(height: height * 0.025),
 
               // CONTACT
-              _buildSectionTitle('📞 Contact Information', width),
+              _buildSectionTitle('📞 ${context.tr('contact_info')}', width),
               SizedBox(height: height * 0.01),
               _buildTextField(
                 controller: _phoneController,
-                label: 'Phone',
+                label: context.tr('phone'),
                 icon: Icons.phone,
                 keyboardType: TextInputType.phone,
               ),
               SizedBox(height: height * 0.015),
               _buildTextField(
                 controller: _emailController,
-                label: 'Email',
+                label: context.tr('email'),
                 icon: Icons.email,
                 keyboardType: TextInputType.emailAddress,
               ),
               SizedBox(height: height * 0.015),
               _buildTextField(
                 controller: _websiteController,
-                label: 'Website',
+                label: context.tr('website'),
                 icon: Icons.language,
                 keyboardType: TextInputType.url,
               ),
               SizedBox(height: height * 0.025),
 
               // RATING
-              _buildSectionTitle('⭐ Rating', width),
+              _buildSectionTitle('⭐ ${context.tr('rating')}', width),
               SizedBox(height: height * 0.01),
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -579,7 +583,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                       }),
                     ),
                     Text(
-                      '${_rating.toStringAsFixed(1)} stars',
+                      '${_rating.toStringAsFixed(1)} ${context.tr('stars')}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.grey.shade700,
@@ -591,17 +595,17 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               SizedBox(height: height * 0.025),
 
               // SETTINGS
-              _buildSectionTitle('⚙️ Settings', width),
+              _buildSectionTitle('⚙️ ${context.tr('settings')}', width),
               SizedBox(height: height * 0.01),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SwitchListTile(
-                  title: const Text('⭐ Featured',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Show on homepage'),
+                  title: Text('⭐ ${context.tr('featured')}',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(context.tr('show_on_homepage')),
                   value: _featured,
                   activeColor: AppColors.accentGold,
                   onChanged: (v) => setState(() => _featured = v),
@@ -611,14 +615,14 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Status',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(context.tr('status'),
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     SizedBox(height: height * 0.01),
                     Row(
                       children: ['active', 'inactive'].map((s) {
@@ -673,7 +677,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                    isEditing ? 'UPDATE HOTEL' : 'ADD HOTEL',
+                    isEditing ? context.tr('update_hotel').toUpperCase() : context.tr('add_hotel').toUpperCase(),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -696,7 +700,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
       style: TextStyle(
         fontSize: width * 0.04,
         fontWeight: FontWeight.bold,
-        color: Colors.grey.shade800,
+        color: context.textPrimary,
       ),
     );
   }
@@ -718,7 +722,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
         labelText: label,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.cardBg,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

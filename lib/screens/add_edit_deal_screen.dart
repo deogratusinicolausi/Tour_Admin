@@ -7,6 +7,8 @@ import '../models/deal_model.dart';
 import '../services/firestore_service.dart';
 import '../services/cloudinary_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
 
 class AddEditDealScreen extends StatefulWidget {
   final DealModel? deal;
@@ -125,7 +127,7 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_imageUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload image'), backgroundColor: Colors.orange),
+        SnackBar(content: Text(context.tr('please_upload_image')), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -162,7 +164,7 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
     if (mounted && success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isEditing ? '✅ Updated' : '✅ Added'),
+          content: Text(isEditing ? context.tr('updated_success') : context.tr('added_success')),
           backgroundColor: Colors.green,
         ),
       );
@@ -186,9 +188,9 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: Text(isEditing ? '✏️ Edit Deal' : '➕ Add Deal'),
+        title: Text(isEditing ? context.tr('edit_deal') : context.tr('add_deal')),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -199,7 +201,7 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _title('📸 Deal Image', width),
+              _title(context.tr('deal_image'), width),
               SizedBox(height: height * 0.01),
               GestureDetector(
                 onTap: _isUploading ? null : _pickImage,
@@ -207,7 +209,7 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
                   height: height * 0.25,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _imageUrl.isEmpty ? Colors.grey.shade300 : AppColors.primary,
@@ -226,8 +228,8 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
                       Icon(Icons.add_photo_alternate,
                           size: width * 0.15, color: Colors.grey.shade400),
                       SizedBox(height: height * 0.01),
-                      Text('Tap to upload',
-                          style: TextStyle(color: Colors.grey.shade600)),
+                        Text(context.tr('tap_to_upload'),
+                          style: TextStyle(color: context.textSecondary)),
                     ],
                   )
                       : null,
@@ -235,36 +237,36 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              _title('📝 Deal Information', width),
+              _title(context.tr('deal_information'), width),
               SizedBox(height: height * 0.01),
-              _field(_titleController, 'Deal Title', Icons.title,
-                  validator: (v) => v!.isEmpty ? 'Required' : null),
+              _field(context, _titleController, context.tr('deal_title'), Icons.title,
+                  validator: (v) => v!.isEmpty ? context.tr('required') : null),
               SizedBox(height: height * 0.015),
-              _field(_itemNameController, 'Item Name', Icons.card_giftcard,
+              _field(context, _itemNameController, context.tr('item_name'), Icons.card_giftcard,
                   hint: 'e.g. Serengeti Safari'),
               SizedBox(height: height * 0.015),
-              _field(_descriptionController, 'Description', Icons.description,
+              _field(context, _descriptionController, context.tr('description'), Icons.description,
                   maxLines: 3),
               SizedBox(height: height * 0.025),
 
-              _title('💰 Pricing', width),
+              _title(context.tr('pricing'), width),
               SizedBox(height: height * 0.01),
               Row(
                 children: [
                   Expanded(
-                    child: _field(_originalPriceController, 'Original Price',
+                    child: _field(context, _originalPriceController, context.tr('original_price'),
                         Icons.attach_money,
                         keyboardType: TextInputType.number,
                         onChanged: (_) => _calculateDiscount(),
-                        validator: (v) => v!.isEmpty ? 'Required' : null),
+                        validator: (v) => v!.isEmpty ? context.tr('required') : null),
                   ),
                   SizedBox(width: width * 0.03),
                   Expanded(
-                    child: _field(_salePriceController, 'Sale Price',
+                    child: _field(context, _salePriceController, context.tr('sale_price'),
                         Icons.local_offer,
                         keyboardType: TextInputType.number,
                         onChanged: (_) => _calculateDiscount(),
-                        validator: (v) => v!.isEmpty ? 'Required' : null),
+                        validator: (v) => v!.isEmpty ? context.tr('required') : null),
                   ),
                 ],
               ),
@@ -276,7 +278,7 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
                       padding: EdgeInsets.symmetric(
                           horizontal: width * 0.03, vertical: height * 0.02),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.cardBg,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.grey.shade300),
                       ),
@@ -303,7 +305,7 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
                       ),
                       child: Column(
                         children: [
-                          Text('DISCOUNT',
+                          Text(context.tr('discount').toUpperCase(),
                               style: TextStyle(
                                   fontSize: width * 0.025,
                                   color: Colors.red,
@@ -321,7 +323,7 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              _title('📅 Deal Duration', width),
+              _title(context.tr('deal_duration'), width),
               SizedBox(height: height * 0.01),
               Row(
                 children: [
@@ -331,27 +333,27 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
                       child: Container(
                         padding: EdgeInsets.all(width * 0.04),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.cardBg,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.grey.shade300),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Start Date',
+                            Text(context.tr('start_date'),
                                 style: TextStyle(
                                     fontSize: width * 0.028,
-                                    color: Colors.grey.shade600)),
+                                    color: context.textSecondary)),
                             SizedBox(height: height * 0.005),
                             Text(
                               _startDate != null
                                   ? '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}'
-                                  : 'Select date',
+                                  : context.tr('select_date'),
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: _startDate != null
-                                      ? Colors.grey.shade800
-                                      : Colors.grey.shade400),
+                                      ? context.textPrimary
+                                      : context.textSecondary.withOpacity(0.5)),
                             ),
                           ],
                         ),
@@ -365,27 +367,27 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
                       child: Container(
                         padding: EdgeInsets.all(width * 0.04),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.cardBg,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.grey.shade300),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('End Date',
+                            Text(context.tr('end_date'),
                                 style: TextStyle(
                                     fontSize: width * 0.028,
-                                    color: Colors.grey.shade600)),
+                                    color: context.textSecondary)),
                             SizedBox(height: height * 0.005),
                             Text(
                               _endDate != null
                                   ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
-                                  : 'Select date',
+                                  : context.tr('select_date'),
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: _endDate != null
-                                      ? Colors.grey.shade800
-                                      : Colors.grey.shade400),
+                                      ? context.textPrimary
+                                      : context.textSecondary.withOpacity(0.5)),
                             ),
                           ],
                         ),
@@ -396,14 +398,14 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              _title('⚙️ Settings', width),
+              _title(context.tr('settings'), width),
               SizedBox(height: height * 0.01),
               Container(
                 decoration: BoxDecoration(
-                    color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    color: context.cardBg, borderRadius: BorderRadius.circular(12)),
                 child: SwitchListTile(
-                  title: const Text('⭐ Featured',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text('⭐ ' + context.tr('featured'),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: context.textPrimary)),
                   value: _featured,
                   activeColor: AppColors.accentGold,
                   onChanged: (v) => setState(() => _featured = v),
@@ -413,7 +415,7 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                    color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    color: context.cardBg, borderRadius: BorderRadius.circular(12)),
                 child: Row(
                   children: ['active', 'inactive'].map((s) {
                     final isSelected = _status == s;
@@ -457,7 +459,7 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                    isEditing ? 'UPDATE DEAL' : 'ADD DEAL',
+                    isEditing ? context.tr('update_deal').toUpperCase() : context.tr('add_deal').toUpperCase(),
                     style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -478,10 +480,11 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
     style: TextStyle(
         fontSize: w * 0.04,
         fontWeight: FontWeight.bold,
-        color: Colors.grey.shade800),
+        color: context.textPrimary),
   );
 
   Widget _field(
+      BuildContext context,
       TextEditingController c,
       String label,
       IconData icon, {
@@ -499,10 +502,12 @@ class _AddEditDealScreenState extends State<AddEditDealScreen> {
       onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: TextStyle(color: context.textSecondary),
         hintText: hint,
-        prefixIcon: Icon(icon),
+        hintStyle: TextStyle(color: context.textSecondary.withOpacity(0.5)),
+        prefixIcon: Icon(icon, color: context.textSecondary),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.cardBg,
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(

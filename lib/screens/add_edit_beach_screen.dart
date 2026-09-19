@@ -7,6 +7,9 @@ import '../models/beach_model.dart';
 import '../services/firestore_service.dart';
 import '../services/cloudinary_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+
 
 class AddEditBeachScreen extends StatefulWidget {
   final BeachModel? beach;
@@ -124,8 +127,8 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_imageUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please upload main image'),
+        SnackBar(
+          content: Text(context.tr('please_upload_main_image')),
           backgroundColor: Colors.orange,
         ),
       );
@@ -166,7 +169,7 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
     if (mounted && success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isEditing ? '✅ Updated!' : '✅ Added!'),
+          content: Text(isEditing ? '✅ ${context.tr('updated')}!' : '✅ ${context.tr('added')}!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -191,9 +194,9 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: Text(isEditing ? '✏️ Edit Beach' : '➕ Add Beach'),
+        title: Text(isEditing ? '✏️ ${context.tr('edit_beach')}' : '➕ ${context.tr('add_beach')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -204,7 +207,7 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _sectionTitle('📸 Main Image', width),
+              _sectionTitle('📸 ${context.tr('main_image')}', width),
               SizedBox(height: height * 0.01),
               GestureDetector(
                 onTap: _isUploading
@@ -214,7 +217,7 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
                   height: height * 0.25,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _imageUrl.isEmpty
@@ -241,7 +244,7 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
                       SizedBox(height: height * 0.01),
                       Text('Tap to upload',
                           style: TextStyle(
-                              color: Colors.grey.shade600)),
+                              color: context.textSecondary)),
                     ],
                   )
                       : null,
@@ -249,7 +252,7 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
               ),
               SizedBox(height: height * 0.02),
 
-              _sectionTitle('🖼️ Gallery', width),
+              _sectionTitle('🖼️ ${context.tr('gallery')}', width),
               SizedBox(height: height * 0.01),
               SizedBox(
                 height: height * 0.12,
@@ -266,7 +269,7 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
                           width: height * 0.12,
                           margin: EdgeInsets.only(right: width * 0.02),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.cardBg,
                             borderRadius: BorderRadius.circular(12),
                             border:
                             Border.all(color: Colors.grey.shade300),
@@ -314,35 +317,35 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              _sectionTitle('📝 Basic Information', width),
+              _sectionTitle('📝 ${context.tr('basic_info')}', width),
               SizedBox(height: height * 0.01),
-              _buildField(_nameController, 'Beach Name', Icons.beach_access,
-                  validator: (v) => v!.isEmpty ? 'Required' : null),
+              _buildField(_nameController, context.tr('beach_name'), Icons.beach_access,
+                  validator: (v) => v!.isEmpty ? context.tr('required') : null),
               SizedBox(height: height * 0.015),
-              _buildField(_locationController, 'Location', Icons.location_on),
+              _buildField(_locationController, context.tr('location'), Icons.location_on),
               SizedBox(height: height * 0.015),
-              _buildField(_destinationController, 'Nearby Destination',
+              _buildField(_destinationController, context.tr('nearby_destination'),
                   Icons.place_outlined,
-                  hint: 'e.g. Zanzibar, Dar es Salaam'),
+                  hint: context.tr('hint_destination')),
               SizedBox(height: height * 0.015),
-              _buildField(_descriptionController, 'Description',
+              _buildField(_descriptionController, context.tr('description'),
                   Icons.description,
                   maxLines: 4),
               SizedBox(height: height * 0.025),
 
-              _sectionTitle('🌊 Beach Details', width),
+              _sectionTitle('🌊 ${context.tr('beach_details')}', width),
               SizedBox(height: height * 0.01),
               Row(
                 children: [
                   Expanded(
-                    child: _buildDropdown('Water Type', _waterType,
+                    child: _buildDropdown(context.tr('water_type'), _waterType,
                         ['Ocean', 'Sea', 'Lake', 'River', 'Lagoon'], (v) {
                           setState(() => _waterType = v!);
                         }),
                   ),
                   SizedBox(width: width * 0.03),
                   Expanded(
-                    child: _buildDropdown('Best Time', _bestTime,
+                    child: _buildDropdown(context.tr('best_time'), _bestTime,
                         ['All Year', 'Dry Season', 'Wet Season', 'June-Oct'],
                             (v) {
                           setState(() => _bestTime = v!);
@@ -355,25 +358,25 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
                 children: [
                   Expanded(
                     child: _buildField(
-                        _latitudeController, 'Latitude', Icons.my_location,
+                        _latitudeController, context.tr('latitude'), Icons.my_location,
                         keyboardType: TextInputType.number),
                   ),
                   SizedBox(width: width * 0.03),
                   Expanded(
                     child: _buildField(
-                        _longitudeController, 'Longitude', Icons.my_location,
+                        _longitudeController, context.tr('longitude'), Icons.my_location,
                         keyboardType: TextInputType.number),
                   ),
                 ],
               ),
               SizedBox(height: height * 0.025),
 
-              _sectionTitle('🏄 Activities', width),
+              _sectionTitle('🏄 ${context.tr('activities')}', width),
               SizedBox(height: height * 0.01),
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Wrap(
@@ -424,12 +427,12 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              _sectionTitle('⭐ Rating', width),
+              _sectionTitle('⭐ ${context.tr('rating')}', width),
               SizedBox(height: height * 0.01),
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -451,16 +454,16 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              _sectionTitle('⚙️ Settings', width),
+              _sectionTitle('⚙️ ${context.tr('settings')}', width),
               SizedBox(height: height * 0.01),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SwitchListTile(
-                  title: const Text('⭐ Featured',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text('⭐ ${context.tr('featured')}',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   value: _featured,
                   activeColor: AppColors.accentGold,
                   onChanged: (v) => setState(() => _featured = v),
@@ -470,7 +473,7 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -523,7 +526,7 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                    isEditing ? 'UPDATE BEACH' : 'ADD BEACH',
+                    isEditing ? context.tr('update_beach').toUpperCase() : context.tr('add_beach').toUpperCase(),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -546,7 +549,7 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
       style: TextStyle(
         fontSize: width * 0.04,
         fontWeight: FontWeight.bold,
-        color: Colors.grey.shade800,
+        color: context.textPrimary,
       ),
     );
   }
@@ -570,7 +573,7 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
         hintText: hint,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.cardBg,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -596,7 +599,7 @@ class _AddEditBeachScreenState extends State<AddEditBeachScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade300),
       ),

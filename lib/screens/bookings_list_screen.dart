@@ -4,6 +4,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/booking_model.dart';
 import '../services/firestore_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import '../providers/app_theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class BookingsListScreen extends StatefulWidget {
   const BookingsListScreen({super.key});
@@ -41,7 +45,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(ok ? '✅ Booking confirmed' : '❌ Failed'),
+          content: Text(ok ? '✅ ${context.tr('booking_confirmed')}' : '❌ ${context.tr('failed')}'),
           backgroundColor: ok ? Colors.green : Colors.red,
         ),
       );
@@ -68,16 +72,16 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Cancel Booking?'),
-        content: Text('Are you sure you want to cancel booking for "${b.itemName}"?'),
+        title: Text(context.tr('cancel_booking')),
+        content: Text('${context.tr('cancel_booking_confirm')} "${b.itemName}"?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('No')),
+              child: Text(context.tr('no'))),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Yes, Cancel')),
+              child: Text(context.tr('yes_cancel'))),
         ],
       ),
     );
@@ -86,7 +90,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ok ? '✅ Booking cancelled' : '❌ Failed'),
+            content: Text(ok ? '✅ ${context.tr('booking_cancelled')}' : '❌ ${context.tr('failed')}'),
             backgroundColor: ok ? Colors.orange : Colors.red,
           ),
         );
@@ -100,7 +104,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(ok ? '✅ Booking completed' : '❌ Failed'),
+          content: Text(ok ? '✅ ${context.tr('booking_completed')}' : '❌ ${context.tr('failed')}'),
           backgroundColor: ok ? Colors.green : Colors.red,
         ),
       );
@@ -124,9 +128,9 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('📅 Bookings'),
+        title: Text('📅 ${context.tr('bookings')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -138,10 +142,10 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
             color: AppColors.primary,
             child: Row(
               children: [
-                _statBadge('Total', _stats['total'] ?? 0, Colors.white, width),
-                _statBadge('Pending', _stats['pending'] ?? 0, Colors.orange, width),
-                _statBadge('Confirmed', _stats['confirmed'] ?? 0, Colors.green, width),
-                _statBadge('Cancelled', _stats['cancelled'] ?? 0, Colors.red, width),
+                _statBadge(context.tr('total'), _stats['total'] ?? 0, Colors.white, width),
+                _statBadge(context.tr('pending'), _stats['pending'] ?? 0, Colors.orange, width),
+                _statBadge(context.tr('confirmed'), _stats['confirmed'] ?? 0, Colors.green, width),
+                _statBadge(context.tr('cancelled'), _stats['cancelled'] ?? 0, Colors.red, width),
               ],
             ),
           ),
@@ -154,14 +158,14 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
                     controller: _searchController,
                     onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
                     decoration: InputDecoration(
-                      hintText: 'Search bookings...',
+                      hintText: context.tr('search_bookings'),
                       prefixIcon: const Icon(Icons.search),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(vertical: height * 0.015),
@@ -203,7 +207,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            status.toUpperCase(),
+                            context.tr(status).toUpperCase(),
                             style: TextStyle(
                               color: isSelected ? Colors.black : Colors.white,
                               fontWeight: FontWeight.bold,
@@ -247,10 +251,10 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                             size: width * 0.2, color: Colors.grey.shade300),
                         const SizedBox(height: 20),
                         Text(
-                          'No bookings found',
+                          context.tr('no_bookings_found'),
                           style: TextStyle(
                               fontSize: width * 0.05,
-                              color: Colors.grey.shade600,
+                              color: context.textSecondary,
                               fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -328,7 +332,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: height * 0.015),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -368,9 +372,9 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                 Text(
                   b.travelDate != null
                       ? '${b.travelDate!.day}/${b.travelDate!.month}/${b.travelDate!.year}'
-                      : 'No date',
+                      : context.tr('no_date'),
                   style: TextStyle(
-                      fontSize: width * 0.028, color: Colors.grey.shade600),
+                      fontSize: width * 0.028, color: context.textSecondary),
                 ),
               ],
             ),
@@ -430,7 +434,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                             style: TextStyle(
                               fontSize: width * 0.038,
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade800,
+                              color: context.textPrimary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -470,7 +474,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                           ),
                         ),
                         Text(
-                          '${b.guests} guest${b.guests > 1 ? 's' : ''}',
+                          '${b.guests} ${b.guests > 1 ? context.tr('guests') : context.tr('guest')}',
                           style: TextStyle(
                             fontSize: width * 0.026,
                             color: Colors.grey.shade500,
@@ -489,7 +493,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                     Expanded(
                       child: _actionBtn(
                         icon: Icons.visibility,
-                        label: 'View',
+                        label: context.tr('view'),
                         color: AppColors.primary,
                         onTap: () => _viewDetails(b),
                         width: width,
@@ -500,7 +504,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                       Expanded(
                         child: _actionBtn(
                           icon: Icons.check,
-                          label: 'Confirm',
+                          label: context.tr('confirm'),
                           color: Colors.green,
                           onTap: () => _confirmBooking(b),
                           width: width,
@@ -510,7 +514,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                       Expanded(
                         child: _actionBtn(
                           icon: Icons.close,
-                          label: 'Cancel',
+                          label: context.tr('cancel'),
                           color: Colors.red,
                           onTap: () => _cancelBooking(b),
                           width: width,
@@ -521,7 +525,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                       Expanded(
                         child: _actionBtn(
                           icon: Icons.done_all,
-                          label: 'Complete',
+                          label: context.tr('complete'),
                           color: Colors.blue,
                           onTap: () => _completeBooking(b),
                           width: width,
@@ -531,7 +535,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                       Expanded(
                         child: _actionBtn(
                           icon: Icons.close,
-                          label: 'Cancel',
+                          label: context.tr('cancel'),
                           color: Colors.red,
                           onTap: () => _cancelBooking(b),
                           width: width,
@@ -592,8 +596,8 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
       maxChildSize: 0.95,
       builder: (_, controller) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: context.cardBg,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
@@ -616,8 +620,8 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                     const Icon(Icons.receipt_long,
                         color: AppColors.primary, size: 28),
                     SizedBox(width: width * 0.03),
-                    const Text(
-                      'Booking Details',
+                    Text(
+                      context.tr('booking_details'),
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -640,11 +644,11 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Booking ID
-                      _detailRow('Booking ID', b.id.substring(0, 8).toUpperCase(), width),
+                      _detailRow(context.tr('booking_id'), b.id.substring(0, 8).toUpperCase(), width),
 
                       // Status
-                      _detailRow('Status', b.bookingStatus.toUpperCase(), width),
-                      _detailRow('Payment', b.paymentStatus.toUpperCase(), width),
+                      _detailRow(context.tr('status'), b.bookingStatus.toUpperCase(), width),
+                      _detailRow(context.tr('payment'), b.paymentStatus.toUpperCase(), width),
 
                       const Divider(height: 30),
 
@@ -662,42 +666,42 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                         ),
                         SizedBox(height: height * 0.015),
                       ],
-                      _detailRow('Type', b.itemType.toUpperCase(), width),
-                      _detailRow('Name', b.itemName, width),
+                      _detailRow(context.tr('type'), b.itemType.toUpperCase(), width),
+                      _detailRow(context.tr('name'), b.itemName, width),
 
                       const Divider(height: 30),
 
                       // Guest
-                      _sectionTitle('Guest Info', width),
-                      _detailRow('Name', b.userName, width),
-                      _detailRow('Email', b.userEmail.isNotEmpty ? b.userEmail : 'N/A', width),
-                      _detailRow('Phone', b.userPhone.isNotEmpty ? b.userPhone : 'N/A', width),
+                      _sectionTitle(context.tr('guest_info'), width),
+                      _detailRow(context.tr('name'), b.userName, width),
+                      _detailRow(context.tr('email'), b.userEmail.isNotEmpty ? b.userEmail : 'N/A', width),
+                      _detailRow(context.tr('phone'), b.userPhone.isNotEmpty ? b.userPhone : 'N/A', width),
 
                       const Divider(height: 30),
 
                       // Travel
-                      _sectionTitle('Travel Details', width),
+                      _sectionTitle(context.tr('travel_details'), width),
                       _detailRow(
-                        'Travel Date',
+                        context.tr('travel_date'),
                         b.travelDate != null
                             ? '${b.travelDate!.day}/${b.travelDate!.month}/${b.travelDate!.year}'
                             : 'N/A',
                         width,
                       ),
-                      _detailRow('Guests', b.guests.toString(), width),
-                      _detailRow('Quantity', b.quantity.toString(), width),
+                      _detailRow(context.tr('guests'), b.guests.toString(), width),
+                      _detailRow(context.tr('quantity'), b.quantity.toString(), width),
 
                       const Divider(height: 30),
 
                       // Amount
-                      _sectionTitle('Payment', width),
-                      _detailRow('Amount', '${b.currency} ${b.amount.toStringAsFixed(2)}', width),
-                      _detailRow('Method', b.paymentMethod.isNotEmpty ? b.paymentMethod : 'N/A', width),
-                      _detailRow('Payment Status', b.paymentStatus.toUpperCase(), width),
+                      _sectionTitle(context.tr('payment'), width),
+                      _detailRow(context.tr('amount'), '${b.currency} ${b.amount.toStringAsFixed(2)}', width),
+                      _detailRow(context.tr('method'), b.paymentMethod.isNotEmpty ? b.paymentMethod : 'N/A', width),
+                      _detailRow(context.tr('payment_status'), b.paymentStatus.toUpperCase(), width),
 
                       if (b.specialRequests.isNotEmpty) ...[
                         const Divider(height: 30),
-                        _sectionTitle('Special Requests', width),
+                        _sectionTitle(context.tr('special_requests'), width),
                         Container(
                           padding: EdgeInsets.all(width * 0.04),
                           decoration: BoxDecoration(
@@ -711,7 +715,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                       const Divider(height: 30),
 
                       // Actions
-                      _sectionTitle('Contact', width),
+                      _sectionTitle(context.tr('contact'), width),
                       SizedBox(height: height * 0.01),
                       Row(
                         children: [
@@ -726,7 +730,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                                 }
                               },
                               icon: const Icon(Icons.phone),
-                              label: const Text('Call'),
+                              label: Text(context.tr('call')),
                             ),
                           ),
                           SizedBox(width: width * 0.03),
@@ -741,7 +745,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
                                 }
                               },
                               icon: const Icon(Icons.email),
-                              label: const Text('Email'),
+                              label: Text(context.tr('email')),
                             ),
                           ),
                         ],
@@ -783,7 +787,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
             child: Text(
               label,
               style: TextStyle(
-                color: Colors.grey.shade600,
+                color: context.textSecondary,
                 fontSize: width * 0.032,
               ),
             ),
@@ -794,7 +798,7 @@ class _BookingsListScreenState extends State<BookingsListScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: width * 0.032,
-                color: Colors.grey.shade800,
+                color: context.textPrimary,
               ),
             ),
           ),

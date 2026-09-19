@@ -3,6 +3,9 @@ import '../models/culture_model.dart';
 import '../services/firestore_service.dart';
 import '../utils/colors.dart';
 import 'add_edit_culture_screen.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import 'package:provider/provider.dart';
 
 class CultureListScreen extends StatefulWidget {
   const CultureListScreen({super.key});
@@ -17,16 +20,16 @@ class _CultureListScreenState extends State<CultureListScreen> {
   String _searchQuery = '';
   String _filterCategory = 'all';
 
-  final List<Map<String, dynamic>> _categories = [
-    {'value': 'all', 'label': 'ALL', 'icon': '🌍'},
-    {'value': 'Tribe', 'label': 'TRIBES', 'icon': '👥'},
-    {'value': 'Festival', 'label': 'FESTIVALS', 'icon': '🎉'},
-    {'value': 'Art', 'label': 'ARTS', 'icon': '🎨'},
-    {'value': 'Music', 'label': 'MUSIC', 'icon': '🎵'},
-    {'value': 'Dance', 'label': 'DANCE', 'icon': '💃'},
-    {'value': 'Food', 'label': 'FOOD', 'icon': '🍛'},
-    {'value': 'Historical', 'label': 'HISTORY', 'icon': '🏛️'},
-    {'value': 'Village', 'label': 'VILLAGES', 'icon': '🏠'},
+  List<Map<String, dynamic>> get _categories => [
+    {'value': 'all', 'label': context.tr('all'), 'icon': '🌍'},
+    {'value': 'Tribe', 'label': context.tr('tribes'), 'icon': '👥'},
+    {'value': 'Festival', 'label': context.tr('festivals'), 'icon': '🎉'},
+    {'value': 'Art', 'label': context.tr('arts'), 'icon': '🎨'},
+    {'value': 'Music', 'label': context.tr('music'), 'icon': '🎵'},
+    {'value': 'Dance', 'label': context.tr('dance'), 'icon': '💃'},
+    {'value': 'Food', 'label': context.tr('food'), 'icon': '🍛'},
+    {'value': 'Historical', 'label': context.tr('history'), 'icon': '🏛️'},
+    {'value': 'Village', 'label': context.tr('villages'), 'icon': '🏠'},
   ];
 
   @override
@@ -39,27 +42,27 @@ class _CultureListScreenState extends State<CultureListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Culture?'),
+        title: Text(context.tr('delete_culture_q')),
         content: Text(
-            'Are you sure you want to delete "${culture.name}"?'),
+            '${context.tr('confirm_delete')} "${culture.name}"?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(context.tr('cancel'))),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete')),
+              child: Text(context.tr('delete'))),
         ],
       ),
     );
 
     if (confirm == true) {
       final ok = await _service.deleteCulture(culture.id);
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ok ? '✅ Culture deleted' : '❌ Failed'),
+            content: Text(ok ? '✅ ${context.tr('deleted_success')}' : '❌ ${context.tr('failed')}'),
             backgroundColor: ok ? Colors.green : Colors.red,
           ),
         );
@@ -128,20 +131,20 @@ class _CultureListScreenState extends State<CultureListScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('🎭 Culture Management'),
+        title: Text('🎭 ${context.tr('culture_management')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openAddEdit(),
         backgroundColor: AppColors.accentGold,
-        icon: const Icon(Icons.add, color: Colors.black),
-        label: const Text(
-          'Add Culture',
+        icon: Icon(Icons.add, color: context.cardBg),
+        label: Text(
+          context.tr('add_culture'),
           style:
-          TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          TextStyle(color: context.cardBg, fontWeight: FontWeight.bold),
         ),
       ),
       body: Column(
@@ -154,7 +157,7 @@ class _CultureListScreenState extends State<CultureListScreen> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
@@ -162,7 +165,7 @@ class _CultureListScreenState extends State<CultureListScreen> {
                     onChanged: (v) =>
                         setState(() => _searchQuery = v.toLowerCase()),
                     decoration: InputDecoration(
-                      hintText: 'Search culture...',
+                      hintText: context.tr('search_culture'),
                       prefixIcon: const Icon(Icons.search),
                       border: InputBorder.none,
                       contentPadding:
@@ -272,20 +275,20 @@ class _CultureListScreenState extends State<CultureListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.museum,
+          Icon(Icons.category,
               size: width * 0.2, color: Colors.grey.shade300),
           const SizedBox(height: 20),
           Text(
-            _searchQuery.isEmpty ? 'No culture yet' : 'No results',
+            _searchQuery.isEmpty ? context.tr('no_culture_yet') : context.tr('no_results'),
             style: TextStyle(
               fontSize: width * 0.05,
-              color: Colors.grey.shade600,
+              color: context.textSecondary,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            'Tap + to add culture',
+            context.tr('tap_plus_culture'),
             style: TextStyle(color: Colors.grey.shade400),
           ),
         ],
@@ -301,7 +304,7 @@ class _CultureListScreenState extends State<CultureListScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: height * 0.015),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -427,7 +430,7 @@ class _CultureListScreenState extends State<CultureListScreen> {
                   style: TextStyle(
                     fontSize: width * 0.045,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                    color: context.textPrimary,
                   ),
                 ),
                 SizedBox(height: height * 0.005),
@@ -435,7 +438,7 @@ class _CultureListScreenState extends State<CultureListScreen> {
                   children: [
                     Icon(Icons.location_on,
                         size: width * 0.035,
-                        color: Colors.grey.shade500),
+                        color: context.textSecondary),
                     SizedBox(width: width * 0.01),
                     Expanded(
                       child: Text(
@@ -443,7 +446,7 @@ class _CultureListScreenState extends State<CultureListScreen> {
                             ? '${culture.location}, ${culture.region}'
                             : culture.country,
                         style: TextStyle(
-                          color: Colors.grey.shade500,
+                          color: context.textSecondary,
                           fontSize: width * 0.03,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -457,13 +460,13 @@ class _CultureListScreenState extends State<CultureListScreen> {
                     children: [
                       Icon(Icons.language,
                           size: width * 0.035,
-                          color: Colors.grey.shade500),
+                          color: context.textSecondary),
                       SizedBox(width: width * 0.01),
                       Expanded(
                         child: Text(
                           culture.languages.join(', '),
                           style: TextStyle(
-                            color: Colors.grey.shade500,
+                            color: context.textSecondary,
                             fontSize: width * 0.03,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -478,7 +481,7 @@ class _CultureListScreenState extends State<CultureListScreen> {
                     Expanded(
                       child: _actionBtn(
                         icon: Icons.edit,
-                        label: 'Edit',
+                        label: context.tr('edit'),
                         color: Colors.blue,
                         onTap: () => _openAddEdit(culture),
                         width: width,
@@ -491,8 +494,8 @@ class _CultureListScreenState extends State<CultureListScreen> {
                             ? Icons.star
                             : Icons.star_border,
                         label: culture.featured
-                            ? 'Unfeature'
-                            : 'Feature',
+                            ? context.tr('unfeature')
+                            : context.tr('feature'),
                         color: AppColors.accentGold,
                         onTap: () async {
                           await _service.toggleCultureFeatured(
@@ -505,7 +508,7 @@ class _CultureListScreenState extends State<CultureListScreen> {
                     Expanded(
                       child: _actionBtn(
                         icon: Icons.delete,
-                        label: 'Delete',
+                        label: context.tr('delete'),
                         color: Colors.red,
                         onTap: () => _delete(culture),
                         width: width,

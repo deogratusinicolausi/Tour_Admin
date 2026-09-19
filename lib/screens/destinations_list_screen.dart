@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/destination_model.dart';
 import '../services/firestore_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import 'package:provider/provider.dart';
 import 'add_edit_destination_screen.dart';
 
 class DestinationsListScreen extends StatefulWidget {
@@ -27,17 +30,17 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Destination?'),
-        content: Text('Are you sure you want to delete "${dest.name}"?'),
+        title: Text(context.tr('delete_destination_q')),
+        content: Text('${context.tr('confirm_delete')} "${dest.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(context.tr('delete')),
           ),
         ],
       ),
@@ -49,8 +52,8 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(success
-                ? '✅ Destination deleted'
-                : '❌ Failed to delete'),
+                ? '✅ ${context.tr('deleted_success')}'
+                : '❌ ${context.tr('delete_failed')}'),
             backgroundColor: success ? Colors.green : Colors.red,
           ),
         );
@@ -73,9 +76,9 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('📍 Destinations'),
+        title: Text('📍 ${context.tr('destinations')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -84,9 +87,9 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
         onPressed: () => _openAddEdit(),
         backgroundColor: AppColors.accentGold,
         icon: const Icon(Icons.add, color: Colors.black),
-        label: const Text(
-          'Add Destination',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        label: Text(
+          context.tr('add_destination'),
+          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
       body: Column(
@@ -100,7 +103,7 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
                 // Search
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
@@ -109,7 +112,7 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
                       setState(() => _searchQuery = value.toLowerCase());
                     },
                     decoration: InputDecoration(
-                      hintText: 'Search destinations...',
+                      hintText: context.tr('search_destinations'),
                       prefixIcon: const Icon(Icons.search),
                       border: InputBorder.none,
                       contentPadding:
@@ -222,19 +225,19 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
           const SizedBox(height: 20),
           Text(
             _searchQuery.isEmpty
-                ? 'No destinations yet'
-                : 'No results found',
+                ? context.tr('no_destinations')
+                : context.tr('no_results'),
             style: TextStyle(
               fontSize: width * 0.05,
-              color: Colors.grey.shade600,
+              color: context.textSecondary,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 10),
           Text(
             _searchQuery.isEmpty
-                ? 'Tap + to add your first destination'
-                : 'Try a different search',
+                ? context.tr('tap_to_add')
+                : context.tr('try_different_search'),
             style: TextStyle(color: Colors.grey.shade400),
           ),
         ],
@@ -250,7 +253,7 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: height * 0.015),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -301,7 +304,7 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
                           Icon(Icons.star, size: 14, color: Colors.black),
                           SizedBox(width: 4),
                           Text(
-                            'FEATURED',
+                            'FEATURED', // Internal tag, usually not translated
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -350,7 +353,7 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
                   style: TextStyle(
                     fontSize: width * 0.045,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                    color: context.textPrimary,
                   ),
                 ),
                 SizedBox(height: height * 0.005),
@@ -378,7 +381,7 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: context.textSecondary,
                       fontSize: width * 0.03,
                     ),
                   ),
@@ -391,7 +394,7 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
                     Expanded(
                       child: _buildActionButton(
                         icon: Icons.edit,
-                        label: 'Edit',
+                        label: context.tr('edit'),
                         color: Colors.blue,
                         onTap: () => _openAddEdit(dest),
                         width: width,
@@ -401,7 +404,7 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
                     Expanded(
                       child: _buildActionButton(
                         icon: dest.featured ? Icons.star : Icons.star_border,
-                        label: dest.featured ? 'Unfeature' : 'Feature',
+                        label: dest.featured ? context.tr('unfeature') : context.tr('feature'),
                         color: AppColors.accentGold,
                         onTap: () async {
                           await _firestoreService.toggleFeatured(
@@ -414,7 +417,7 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
                     Expanded(
                       child: _buildActionButton(
                         icon: Icons.delete,
-                        label: 'Delete',
+                        label: context.tr('delete'),
                         color: Colors.red,
                         onTap: () => _deleteDestination(dest),
                         width: width,

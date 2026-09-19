@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/tour_model.dart';
 import '../services/firestore_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import 'package:provider/provider.dart';
 import 'add_edit_tour_screen.dart';
 
 class ToursListScreen extends StatefulWidget {
@@ -27,12 +30,12 @@ class _ToursListScreenState extends State<ToursListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Tour?'),
-        content: Text('Are you sure you want to delete "${tour.name}"?'),
+        title: Text(context.tr('delete_tour_q')),
+        content: Text('${context.tr('confirm_delete')} "${tour.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -48,7 +51,7 @@ class _ToursListScreenState extends State<ToursListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(success ? '✅ Tour deleted' : '❌ Failed'),
+            content: Text(success ? '✅ ${context.tr('deleted')}' : '❌ ${context.tr('failed')}'),
             backgroundColor: success ? Colors.green : Colors.red,
           ),
         );
@@ -69,18 +72,18 @@ class _ToursListScreenState extends State<ToursListScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('🦁 Tours & Safaris'),
+        title: Text('🦁 ${context.tr('tours_safaris')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openAddEdit(),
         backgroundColor: AppColors.accentGold,
-        icon: const Icon(Icons.add, color: Colors.black),
-        label: const Text(
-          'Add Tour',
+        icon: const Icon(Icons.add, color: Colors.black87),
+        label: Text(
+          context.tr('add_tour'),
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
@@ -94,7 +97,7 @@ class _ToursListScreenState extends State<ToursListScreen> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
@@ -102,7 +105,7 @@ class _ToursListScreenState extends State<ToursListScreen> {
                     onChanged: (v) =>
                         setState(() => _searchQuery = v.toLowerCase()),
                     decoration: InputDecoration(
-                      hintText: 'Search tours...',
+                      hintText: '${context.tr('search_tours')}...',
                       prefixIcon: const Icon(Icons.search),
                       border: InputBorder.none,
                       contentPadding:
@@ -138,7 +141,7 @@ class _ToursListScreenState extends State<ToursListScreen> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          status.toUpperCase(),
+                          context.tr(status).toUpperCase(),
                           style: TextStyle(
                             color: isSelected ? Colors.black : Colors.white,
                             fontWeight: FontWeight.bold,
@@ -196,13 +199,13 @@ class _ToursListScreenState extends State<ToursListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.tour, size: width * 0.2, color: Colors.grey.shade300),
+          Icon(Icons.tour, size: width * 0.2, color: context.textSecondary.withOpacity(0.3)),
           const SizedBox(height: 20),
           Text(
-            _searchQuery.isEmpty ? 'No tours yet' : 'No results found',
+            _searchQuery.isEmpty ? context.tr('no_tours') : context.tr('no_results'),
             style: TextStyle(
               fontSize: width * 0.05,
-              color: Colors.grey.shade600,
+              color: context.textSecondary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -215,7 +218,7 @@ class _ToursListScreenState extends State<ToursListScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: height * 0.015),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -284,7 +287,7 @@ class _ToursListScreenState extends State<ToursListScreen> {
                           Icon(Icons.star, size: 14, color: Colors.black),
                           SizedBox(width: 4),
                           Text(
-                            'FEATURED',
+                            'FEATURED', // Internal tag, usually remains English or untranslated
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -330,20 +333,20 @@ class _ToursListScreenState extends State<ToursListScreen> {
                   style: TextStyle(
                     fontSize: width * 0.045,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                    color: context.textPrimary,
                   ),
                 ),
                 SizedBox(height: height * 0.005),
                 Row(
                   children: [
                     Icon(Icons.location_on,
-                        size: width * 0.035, color: Colors.grey.shade500),
+                        size: width * 0.035, color: context.textSecondary),
                     SizedBox(width: width * 0.01),
                     Expanded(
                       child: Text(
                         tour.destinationName,
                         style: TextStyle(
-                          color: Colors.grey.shade500,
+                          color: context.textSecondary,
                           fontSize: width * 0.03,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -355,23 +358,23 @@ class _ToursListScreenState extends State<ToursListScreen> {
                 Row(
                   children: [
                     Icon(Icons.access_time,
-                        size: width * 0.035, color: Colors.grey.shade500),
+                        size: width * 0.035, color: context.textSecondary),
                     SizedBox(width: width * 0.01),
                     Text(
                       tour.duration,
                       style: TextStyle(
-                        color: Colors.grey.shade500,
+                        color: context.textSecondary,
                         fontSize: width * 0.03,
                       ),
                     ),
                     const Spacer(),
                     Icon(Icons.star,
-                        size: width * 0.035, color: AppColors.accentGold),
+                        size: width * 0.035, color: Colors.amber),
                     SizedBox(width: width * 0.01),
                     Text(
                       tour.rating.toStringAsFixed(1),
                       style: TextStyle(
-                        color: Colors.grey.shade700,
+                        color: context.textPrimary,
                         fontSize: width * 0.03,
                         fontWeight: FontWeight.bold,
                       ),
@@ -384,7 +387,7 @@ class _ToursListScreenState extends State<ToursListScreen> {
                     Expanded(
                       child: _buildActionButton(
                         icon: Icons.edit,
-                        label: 'Edit',
+                        label: context.tr('edit'),
                         color: Colors.blue,
                         onTap: () => _openAddEdit(tour),
                         width: width,
@@ -394,7 +397,7 @@ class _ToursListScreenState extends State<ToursListScreen> {
                     Expanded(
                       child: _buildActionButton(
                         icon: tour.featured ? Icons.star : Icons.star_border,
-                        label: tour.featured ? 'Unfeature' : 'Feature',
+                        label: tour.featured ? context.tr('unfeature') : context.tr('feature'),
                         color: AppColors.accentGold,
                         onTap: () async {
                           await _firestoreService.toggleTourFeatured(
@@ -407,7 +410,7 @@ class _ToursListScreenState extends State<ToursListScreen> {
                     Expanded(
                       child: _buildActionButton(
                         icon: Icons.delete,
-                        label: 'Delete',
+                        label: context.tr('delete'),
                         color: Colors.red,
                         onTap: () => _deleteTour(tour),
                         width: width,

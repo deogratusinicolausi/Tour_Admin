@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/global_search_service.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
 import '../utils/colors.dart';
 import 'destinations_list_screen.dart';
 import 'hotels_list_screen.dart';
@@ -83,9 +86,9 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('🔍 Global Search'),
+        title: Text('🔍 ${context.tr('global_search')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -97,7 +100,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
             color: AppColors.primary,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: TextField(
@@ -105,7 +108,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                 autofocus: true,
                 onChanged: (v) => _performSearch(v),
                 decoration: InputDecoration(
-                  hintText: 'Search anything... (hotels, tours, users)',
+                  hintText: context.tr('search_hint'),
                   prefixIcon: const Icon(Icons.search, size: 24),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: height * 0.02),
@@ -155,7 +158,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                         child: Row(
                           children: [
                             Text(
-                              cat.toUpperCase(),
+                              context.tr(cat).toUpperCase(),
                               style: TextStyle(
                                 color:
                                 isSelected ? Colors.black : Colors.white,
@@ -216,23 +219,23 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search, size: width * 0.25, color: Colors.grey.shade300),
+          Icon(Icons.search, size: width * 0.25, color: context.textSecondary.withOpacity(0.3)),
           const SizedBox(height: 20),
           Text(
-            'Search Anything',
+            context.tr('search_anything'),
             style: TextStyle(
               fontSize: width * 0.06,
               fontWeight: FontWeight.bold,
-              color: Colors.grey.shade600,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 10),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: width * 0.15),
             child: Text(
-              'Type to search across destinations, hotels, tours, activities, deals, bookings, and users',
+              context.tr('search_description'),
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+              style: TextStyle(color: context.textSecondary, fontSize: 13),
             ),
           ),
           const SizedBox(height: 30),
@@ -264,11 +267,11 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
         padding: EdgeInsets.symmetric(
             horizontal: width * 0.035, vertical: width * 0.02),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(color: context.textSecondary.withOpacity(0.2)),
         ),
-        child: Text(text, style: const TextStyle(fontSize: 12)),
+        child: Text(text, style: TextStyle(fontSize: 12, color: context.textPrimary)),
       ),
     );
   }
@@ -279,20 +282,20 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.search_off,
-              size: width * 0.2, color: Colors.grey.shade300),
+              size: width * 0.2, color: context.textSecondary.withOpacity(0.3)),
           const SizedBox(height: 20),
           Text(
-            'No results found',
+            context.tr('no_results'),
             style: TextStyle(
               fontSize: width * 0.05,
               fontWeight: FontWeight.bold,
-              color: Colors.grey.shade600,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            'Try different keywords',
-            style: TextStyle(color: Colors.grey.shade400),
+            context.tr('try_different_keywords'),
+            style: TextStyle(color: context.textSecondary),
           ),
         ],
       ),
@@ -326,7 +329,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
         margin: EdgeInsets.only(bottom: height * 0.012),
         padding: EdgeInsets.all(width * 0.035),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
@@ -362,7 +365,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      type.toUpperCase(),
+                      context.tr(type).toUpperCase(),
                       style: TextStyle(
                         color: color,
                         fontSize: 9,
@@ -376,7 +379,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: width * 0.038,
-                      color: Colors.grey.shade800,
+                      color: context.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -387,7 +390,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                       subtitle,
                       style: TextStyle(
                         fontSize: width * 0.028,
-                        color: Colors.grey.shade500,
+                        color: context.textSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -400,7 +403,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
             Icon(
               Icons.arrow_forward_ios,
               size: width * 0.035,
-              color: Colors.grey.shade400,
+              color: context.textSecondary,
             ),
           ],
         ),

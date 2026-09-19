@@ -7,6 +7,8 @@ import '../models/tour_model.dart';
 import '../services/firestore_service.dart';
 import '../services/cloudinary_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
 
 class AddEditTourScreen extends StatefulWidget {
   final TourModel? tour;
@@ -150,7 +152,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
     if (_images.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please upload at least one image'),
+          content: Text('Please upload at least one image'), // Consider adding to translation keys
           backgroundColor: Colors.orange,
         ),
       );
@@ -222,9 +224,9 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: Text(isEditing ? '✏️ Edit Tour' : '➕ Add Tour'),
+        title: Text(isEditing ? '✏️ ${context.tr('edit_tour')}' : '➕ ${context.tr('add_tour')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -236,7 +238,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // IMAGES
-              _buildSectionTitle('📸 Tour Images', width),
+              _buildSectionTitle('📸 ${context.tr('tour_images')}', width),
               SizedBox(height: height * 0.01),
               SizedBox(
                 height: height * 0.15,
@@ -251,9 +253,9 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
                           width: height * 0.15,
                           margin: EdgeInsets.only(right: width * 0.02),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.cardBg,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300),
+                            border: Border.all(color: context.textSecondary.withOpacity(0.2)),
                           ),
                           child: _isUploading
                               ? const Center(
@@ -302,12 +304,12 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
               SizedBox(height: height * 0.025),
 
               // BASIC INFO
-              _buildSectionTitle('📝 Basic Information', width),
+              _buildSectionTitle('📝 ${context.tr('basic_info')}', width),
               SizedBox(height: height * 0.01),
 
               _buildTextField(
                 controller: _nameController,
-                label: 'Tour Name',
+                label: context.tr('tour_name'),
                 icon: Icons.tour,
                 validator: (v) => v!.isEmpty ? 'Name required' : null,
               ),
@@ -316,10 +318,10 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
               DropdownButtonFormField<String>(
                 value: _destinationId.isEmpty ? null : _destinationId,
                 decoration: InputDecoration(
-                  labelText: 'Destination',
+                  labelText: context.tr('destination'),
                   prefixIcon: const Icon(Icons.place),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.cardBg,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -346,19 +348,19 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
 
               _buildTextField(
                 controller: _descriptionController,
-                label: 'Description',
+                label: context.tr('description'),
                 icon: Icons.description,
                 maxLines: 4,
               ),
               SizedBox(height: height * 0.025),
 
               // TOUR TYPE
-              _buildSectionTitle('🎯 Tour Type', width),
+              _buildSectionTitle('🎯 ${context.tr('tour_type')}', width),
               SizedBox(height: height * 0.01),
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Wrap(
@@ -388,7 +390,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
                               style: TextStyle(
                                 color: isSelected
                                     ? Colors.white
-                                    : Colors.grey.shade700,
+                                    : context.textSecondary,
                                 fontSize: 12,
                                 fontWeight: isSelected
                                     ? FontWeight.bold
@@ -405,7 +407,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
               SizedBox(height: height * 0.025),
 
               // PRICING & DURATION
-              _buildSectionTitle('💰 Pricing & Duration', width),
+              _buildSectionTitle('💰 ${context.tr('pricing_duration')}', width),
               SizedBox(height: height * 0.01),
 
               Row(
@@ -414,7 +416,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
                     flex: 2,
                     child: _buildTextField(
                       controller: _priceController,
-                      label: 'Price',
+                      label: context.tr('price'),
                       icon: Icons.attach_money,
                       keyboardType: TextInputType.number,
                       validator: (v) => v!.isEmpty ? 'Price required' : null,
@@ -426,9 +428,9 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
                       padding: EdgeInsets.symmetric(
                           horizontal: width * 0.03, vertical: height * 0.02),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.cardBg,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
+                        border: Border.all(color: context.textSecondary.withOpacity(0.2)),
                       ),
                       child: DropdownButton<String>(
                         value: _currency,
@@ -452,7 +454,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
                   Expanded(
                     child: _buildTextField(
                       controller: _durationController,
-                      label: 'Duration',
+                      label: context.tr('duration'),
                       icon: Icons.access_time,
                     ),
                   ),
@@ -460,7 +462,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
                   Expanded(
                     child: _buildTextField(
                       controller: _maxPeopleController,
-                      label: 'Max People',
+                      label: context.tr('max_people'),
                       icon: Icons.people,
                       keyboardType: TextInputType.number,
                     ),
@@ -470,7 +472,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
               SizedBox(height: height * 0.025),
 
               // ITINERARY
-              _buildSectionTitle('🗺️ Itinerary', width),
+              _buildSectionTitle('🗺️ ${context.tr('itinerary')}', width),
               SizedBox(height: height * 0.01),
               _buildListBuilder(
                 controller: _itineraryController,
@@ -486,7 +488,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
               SizedBox(height: height * 0.025),
 
               // INCLUDED
-              _buildSectionTitle('✅ What\'s Included', width),
+              _buildSectionTitle('✅ ${context.tr('included')}', width),
               SizedBox(height: height * 0.01),
               _buildListBuilder(
                 controller: _includedController,
@@ -503,7 +505,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
               SizedBox(height: height * 0.025),
 
               // EXCLUDED
-              _buildSectionTitle('❌ What\'s Not Included', width),
+              _buildSectionTitle('❌ ${context.tr('excluded')}', width),
               SizedBox(height: height * 0.01),
               _buildListBuilder(
                 controller: _excludedController,
@@ -520,12 +522,12 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
               SizedBox(height: height * 0.025),
 
               // RATING
-              _buildSectionTitle('⭐ Rating', width),
+              _buildSectionTitle('⭐ ${context.tr('rating')}', width),
               SizedBox(height: height * 0.01),
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -548,16 +550,18 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
               SizedBox(height: height * 0.025),
 
               // SETTINGS
-              _buildSectionTitle('⚙️ Settings', width),
+              _buildSectionTitle('⚙️ ${context.tr('settings')}', width),
               SizedBox(height: height * 0.01),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SwitchListTile(
-                  title: const Text('⭐ Featured',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text('⭐ ${context.tr('featured')}',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: context.textPrimary)),
                   value: _featured,
                   activeColor: AppColors.accentGold,
                   onChanged: (v) => setState(() => _featured = v),
@@ -567,7 +571,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -584,7 +588,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? (s == 'active' ? Colors.green : Colors.grey)
-                              : Colors.grey.shade200,
+                              : context.textSecondary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -592,7 +596,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
                           style: TextStyle(
                             color: isSelected
                                 ? Colors.white
-                                : Colors.grey.shade700,
+                                : context.textSecondary,
                             fontWeight: FontWeight.bold,
                             fontSize: width * 0.03,
                           ),
@@ -619,7 +623,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                    isEditing ? 'UPDATE TOUR' : 'ADD TOUR',
+                    isEditing ? context.tr('update_tour').toUpperCase() : context.tr('add_tour').toUpperCase(),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -658,7 +662,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
                   hintText: hint,
                   prefixIcon: Icon(icon, color: color),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.cardBg,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -683,7 +687,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
               padding: EdgeInsets.symmetric(
                   horizontal: width * 0.03, vertical: height * 0.008),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -693,7 +697,10 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
                   Expanded(
                     child: Text(
                       e.value,
-                      style: TextStyle(fontSize: width * 0.032),
+                      style: TextStyle(
+                        fontSize: width * 0.032,
+                        color: context.textPrimary,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -716,7 +723,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
       style: TextStyle(
         fontSize: width * 0.04,
         fontWeight: FontWeight.bold,
-        color: Colors.grey.shade800,
+        color: context.textPrimary,
       ),
     );
   }
@@ -738,14 +745,16 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
         labelText: label,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.cardBg,
+        labelStyle: TextStyle(color: context.textSecondary),
+        prefixIconColor: context.textSecondary,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(color: context.textSecondary.withOpacity(0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

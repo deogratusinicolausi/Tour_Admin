@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
+import '../services/admin_profile_service.dart';
 import '../services/cloudinary_service.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
 import '../utils/colors.dart';
 import 'admin_login_screen.dart';
 import 'settings_screen.dart';
@@ -18,19 +20,23 @@ class AdminProfileScreen extends StatefulWidget {
 }
 
 class _AdminProfileScreenState extends State<AdminProfileScreen> {
-  final _auth = FirebaseAuth.instance;
-  final _firestore = FirebaseFirestore.instance;
+  final _service = AdminProfileService();
   final _cloudinary = CloudinaryService();
+  final _user = FirebaseAuth.instance.currentUser;
 
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _bioController = TextEditingController();
+  final _countryController = TextEditingController();
+  final _cityController = TextEditingController();
 
-  User? _user;
-  Map<String, dynamic>? _userData;
   String _photoUrl = '';
+  String _email = '';
+  String _role = 'admin';
   bool _isLoading = true;
+  bool _isSaving = false;
   bool _isUploading = false;
+  Map<String, int> _stats = {};
 
   @override
   void initState() {
@@ -39,24 +45,31 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
   }
 
   Future<void> _loadProfile() async {
-    _user = _auth.currentUser;
-    if (_user == null) return;
+    setState(() => _isLoading = true);
 
-    try {
-      DocumentSnapshot doc =
-      await _firestore.collection('users').doc(_user!.uid).get();
-      if (doc.exists) {
-        _userData = doc.data() as Map<String, dynamic>;
-        _nameController.text = _userData?['name'] ?? _user!.displayName ?? '';
-        _phoneController.text = _userData?['phone'] ?? '';
-        _bioController.text = _userData?['bio'] ?? '';
-        _photoUrl = _userData?['photoUrl'] ?? _user!.photoURL ?? '';
-      }
-    } catch (e) {
-      print('Error loading profile: $e');
+    final data = await _service.getAdminProfile();
+    final stats = await _service.getAdminStats();
+
+    if (mounted) {
+      setState(() {
+        if (data != null) {
+          _nameController.text = data['name'] ?? '';
+          _phoneController.text = data['phone'] ?? '';
+          _bioController.text = data['bio'] ?? '';
+          _countryController.text = data['country'] ?? '';
+          _cityController.text = data['city'] ?? '';
+          _photoUrl = data['photoUrl'] ?? '';
+          _email = data['email'] ?? '';
+          _role = data['role'] ?? 'admin';
+        } else {
+          _email = _user?.email ?? '';
+          _nameController.text = _user?.displayName ?? 'Admin';
+          _photoUrl = _user?.photoURL ?? '';
+        }
+        _stats = stats;
+        _isLoading = false;
+      });
     }
-
-    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _pickAndUploadImage() async {
@@ -69,116 +82,157 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
         imageQuality: 85,
       );
       if (pickedFile == null) return;
-
       setState(() => _isUploading = true);
 
       String? url;
       if (kIsWeb) {
         Uint8List bytes = await pickedFile.readAsBytes();
-        url = await _cloudinary.uploadImageBytes(bytes, folder: 'turiva/admin');
+        url = await _cloudinary.uploadImageBytes(bytes,
+            folder: 'turiva/admin');
       } else {
-        url = await _cloudinary.uploadImage(
-            File(pickedFile.path), folder: 'turiva/admin');
+        url = await _cloudinary.uploadImage(File(pickedFile.path),
+            folder: 'turiva/admin');
       }
 
       if (url != null) {
-        await _user!.updatePhotoURL(url);
-        await _firestore.collection('users').doc(_user!.uid).update({
-          'photoUrl': url,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-
-        setState(() {
-          _photoUrl = url!;
-          _isUploading = false;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Profile photo updated!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        setState(() => _isUploading = false);
+        await _service.updatePhoto(url);
+        setState(() => _photoUrl = url!);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.tr('photo_updated')),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        }
       }
+      setState(() => _isUploading = false);
     } catch (e) {
       setState(() => _isUploading = false);
     }
   }
 
   Future<void> _saveProfile() async {
-    if (_user == null) return;
-    setState(() => _isLoading = true);
-
-    try {
-      await _user!.updateDisplayName(_nameController.text.trim());
-      await _firestore.collection('users').doc(_user!.uid).update({
-        'name': _nameController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'bio': _bioController.text.trim(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      await _user!.reload();
-      await _loadProfile();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Profile updated!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
-      }
+    if (_nameController.text.trim().isEmpty) {
+      _showError(context.tr('name_required'));
+      return;
     }
 
-    setState(() => _isLoading = false);
+    setState(() => _isSaving = true);
+
+    final ok = await _service.updateProfile(
+      name: _nameController.text.trim(),
+      phone: _phoneController.text.trim(),
+      bio: _bioController.text.trim(),
+      country: _countryController.text.trim(),
+      city: _cityController.text.trim(),
+    );
+
+    setState(() => _isSaving = false);
+
+    if (ok) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.tr('profile_updated')),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+        await _user?.reload();
+        _loadProfile();
+      }
+    } else {
+      _showError(context.tr('update_failed'));
+    }
   }
 
   Future<void> _changePassword() async {
-    final email = _user?.email;
-    if (email == null) return;
+    final currentController = TextEditingController();
+    final newController = TextEditingController();
+    final confirmController = TextEditingController();
 
-    final confirm = await showDialog<bool>(
+    final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Change Password?'),
-        content: Text('A password reset link will be sent to:\n\n$email'),
+        title: Text('🔐 ${context.tr('change_password')}'),
+        backgroundColor: context.cardBg,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: currentController,
+              obscureText: true,
+              style: TextStyle(color: context.textPrimary),
+              decoration: InputDecoration(
+                labelText: context.tr('current_password'),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: newController,
+              obscureText: true,
+              style: TextStyle(color: context.textPrimary),
+              decoration: InputDecoration(
+                labelText: context.tr('new_password'),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: confirmController,
+              obscureText: true,
+              style: TextStyle(color: context.textPrimary),
+              decoration: InputDecoration(
+                labelText: context.tr('confirm_password'),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Send Link')),
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.tr('cancel')),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary),
+            child: Text(context.tr('change'),
+                style: const TextStyle(color: Colors.white)),
+          ),
         ],
       ),
     );
 
-    if (confirm == true) {
-      try {
-        await _auth.sendPasswordResetEmail(email: email);
+    if (ok == true) {
+      if (newController.text != confirmController.text) {
+        _showError(context.tr('password_mismatch'));
+        return;
+      }
+
+      if (newController.text.length < 6) {
+        _showError(context.tr('password_short'));
+        return;
+      }
+
+      final success = await _service.changePassword(
+        currentPassword: currentController.text,
+        newPassword: newController.text,
+      );
+
+      if (success) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('📧 Reset link sent to $email'),
-              backgroundColor: Colors.green,
+              content: Text(context.tr('password_changed')),
+              backgroundColor: AppColors.primary,
             ),
           );
         }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-          );
-        }
+      } else {
+        _showError(context.tr('change_failed'));
       }
     }
   }
@@ -187,29 +241,40 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Logout?'),
-        content: const Text('Are you sure you want to logout?'),
+        backgroundColor: context.cardBg,
+        title: Text('🚪 ${context.tr('logout')}?'),
+        content: Text(context.tr('confirm_logout')),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.tr('cancel')),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Logout')),
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(context.tr('logout')),
+          ),
         ],
       ),
     );
 
     if (confirm == true) {
-      await _auth.signOut();
+      await FirebaseAuth.instance.signOut();
       if (mounted) {
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const AdminLoginScreen()),
+          MaterialPageRoute(
+              builder: (_) => const AdminLoginScreen()),
+              (route) => false,
         );
       }
     }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: Colors.red),
+    );
   }
 
   @override
@@ -217,6 +282,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _bioController.dispose();
+    _countryController.dispose();
+    _cityController.dispose();
     super.dispose();
   }
 
@@ -226,16 +293,15 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     final height = MediaQuery.of(context).size.height;
 
     if (_isLoading) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        body: const Center(child: CircularProgressIndicator()),
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('👤 Admin Profile'),
+        title: Text('👤 ${context.tr('admin_profile')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         actions: [
@@ -244,7 +310,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                MaterialPageRoute(
+                    builder: (_) => const SettingsScreen()),
               );
             },
           ),
@@ -254,40 +321,56 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
         padding: EdgeInsets.all(width * 0.05),
         child: Column(
           children: [
-            // PROFILE HEADER
+            // ⭐️ PROFILE HEADER
             _buildProfileHeader(width, height),
 
-            SizedBox(height: height * 0.03),
+            SizedBox(height: height * 0.025),
 
-            // STATS
+            // ⭐️ STATS
             _buildStats(width, height),
 
-            SizedBox(height: height * 0.03),
+            SizedBox(height: height * 0.025),
 
-            // EDIT PROFILE
-            _buildSectionTitle('✏️ Edit Profile', width),
+            // ⭐️ EDIT PROFILE
+            _buildSectionTitle('✏️ ${context.tr('edit_profile')}', width),
             SizedBox(height: height * 0.015),
-            _buildTextField(_nameController, 'Full Name', Icons.person),
+            _buildTextField(_nameController, context.tr('full_name'), Icons.person),
             SizedBox(height: height * 0.015),
-            _buildTextField(_phoneController, 'Phone Number', Icons.phone,
+            _buildTextField(_phoneController, context.tr('phone_number'), Icons.phone,
                 keyboardType: TextInputType.phone),
             SizedBox(height: height * 0.015),
-            _buildTextField(_bioController, 'Bio', Icons.description,
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                      _countryController, context.tr('country'), Icons.flag),
+                ),
+                SizedBox(width: width * 0.03),
+                Expanded(
+                  child: _buildTextField(
+                      _cityController, 'City', Icons.location_city),
+                ),
+              ],
+            ),
+            SizedBox(height: height * 0.015),
+            _buildTextField(_bioController, context.tr('bio'), Icons.description,
                 maxLines: 3),
             SizedBox(height: height * 0.02),
             SizedBox(
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: _saveProfile,
+                onPressed: _isSaving ? null : _saveProfile,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text(
-                  'SAVE CHANGES',
-                  style: TextStyle(
+                child: _isSaving
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                  context.tr('save_changes').toUpperCase(),
+                  style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white),
@@ -295,15 +378,15 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
               ),
             ),
 
-            SizedBox(height: height * 0.04),
+            SizedBox(height: height * 0.03),
 
-            // ACTIONS
-            _buildSectionTitle('⚙️ Account Settings', width),
+            // ⭐️ ACCOUNT SETTINGS
+            _buildSectionTitle('⚙️ ${context.tr('account_settings')}', width),
             SizedBox(height: height * 0.015),
             _buildActionTile(
               icon: Icons.lock,
-              title: 'Change Password',
-              subtitle: 'Send reset link to email',
+              title: context.tr('change_password'),
+              subtitle: context.tr('update_password_hint'),
               color: Colors.blue,
               onTap: _changePassword,
               width: width,
@@ -311,13 +394,14 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
             SizedBox(height: height * 0.01),
             _buildActionTile(
               icon: Icons.settings,
-              title: 'App Settings',
-              subtitle: 'Notifications, theme, language',
+              title: context.tr('app_settings'),
+              subtitle: context.tr('app_settings_hint'),
               color: AppColors.accentGold,
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  MaterialPageRoute(
+                      builder: (_) => const SettingsScreen()),
                 );
               },
               width: width,
@@ -325,8 +409,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
             SizedBox(height: height * 0.01),
             _buildActionTile(
               icon: Icons.info,
-              title: 'About TURIVA',
-              subtitle: 'Version 1.0.0',
+              title: context.tr('about_turiva'),
+              subtitle: '${context.tr('version')} 1.0.0',
               color: Colors.green,
               onTap: () => _showAbout(width),
               width: width,
@@ -334,8 +418,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
             SizedBox(height: height * 0.01),
             _buildActionTile(
               icon: Icons.logout,
-              title: 'Logout',
-              subtitle: 'Sign out of admin account',
+              title: context.tr('logout'),
+              subtitle: context.tr('logout_hint'),
               color: Colors.red,
               onTap: _logout,
               width: width,
@@ -399,9 +483,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                       width: width * 0.04,
                       height: width * 0.04,
                       child: const CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
+                          strokeWidth: 2, color: Colors.white),
                     )
                         : Icon(Icons.camera_alt,
                         color: Colors.white, size: width * 0.04),
@@ -412,7 +494,9 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
           ),
           SizedBox(height: height * 0.02),
           Text(
-            _nameController.text.isNotEmpty ? _nameController.text : 'Admin',
+            _nameController.text.isNotEmpty
+                ? _nameController.text
+                : 'Admin',
             style: TextStyle(
                 color: Colors.white,
                 fontSize: width * 0.06,
@@ -420,7 +504,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
           ),
           SizedBox(height: height * 0.005),
           Text(
-            _user?.email ?? '',
+            _email,
             style: TextStyle(
                 color: Colors.white.withOpacity(0.8),
                 fontSize: width * 0.035),
@@ -436,10 +520,11 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.verified, color: AppColors.accentGold, size: 16),
+                const Icon(Icons.verified,
+                    color: AppColors.accentGold, size: 16),
                 SizedBox(width: width * 0.015),
                 Text(
-                  (_userData?['role'] ?? 'admin').toString().toUpperCase(),
+                  _role.toUpperCase(),
                   style: TextStyle(
                       color: AppColors.accentGold,
                       fontWeight: FontWeight.bold,
@@ -456,20 +541,21 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
   Widget _buildStats(double width, double height) {
     return Row(
       children: [
-        _statCard('📍', '5', 'Content', width),
-        _statCard('📅', '12', 'Bookings', width),
-        _statCard('👥', '48', 'Users', width),
+        _statCard('📊', '${_stats['activities'] ?? 0}', context.tr('activities'), width),
+        _statCard('✅', '${_stats['bookings'] ?? 0}', context.tr('confirmed'), width),
+        _statCard('💬', '${_stats['replies'] ?? 0}', context.tr('replies'), width),
       ],
     );
   }
 
-  Widget _statCard(String emoji, String value, String label, double width) {
+  Widget _statCard(
+      String emoji, String value, String label, double width) {
     return Expanded(
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: width * 0.01),
         padding: EdgeInsets.all(width * 0.04),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -490,7 +576,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                     color: AppColors.primary)),
             Text(label,
                 style: TextStyle(
-                    fontSize: width * 0.028, color: Colors.grey.shade600)),
+                    fontSize: width * 0.026, color: Colors.grey.shade600)),
           ],
         ),
       ),
@@ -504,7 +590,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
           style: TextStyle(
               fontSize: width * 0.04,
               fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800)),
+              color: context.textPrimary)),
     );
   }
 
@@ -519,16 +605,18 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
       controller: controller,
       maxLines: maxLines,
       keyboardType: keyboardType,
+      style: TextStyle(color: context.textPrimary),
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon),
+        prefixIcon: Icon(icon, color: context.textSecondary),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.cardBg,
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300)),
+            borderSide: BorderSide(color: context.textSecondary.withOpacity(0.2))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: AppColors.primary, width: 2)),
@@ -549,14 +637,13 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
       child: Container(
         padding: EdgeInsets.all(width * 0.04),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 3)),
           ],
         ),
         child: Row(
@@ -578,16 +665,16 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: width * 0.038,
-                          color: Colors.grey.shade800)),
+                          color: context.textPrimary)),
                   Text(subtitle,
                       style: TextStyle(
                           fontSize: width * 0.028,
-                          color: Colors.grey.shade500)),
+                          color: context.textSecondary)),
                 ],
               ),
             ),
             Icon(Icons.arrow_forward_ios,
-                size: width * 0.035, color: Colors.grey.shade400),
+                size: width * 0.035, color: context.textSecondary),
           ],
         ),
       ),
@@ -598,33 +685,35 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Row(
+        backgroundColor: context.cardBg,
+        title: Row(
           children: [
-            Icon(Icons.explore, color: AppColors.primary),
-            SizedBox(width: 10),
-            Text('TURIVA Admin'),
+            const Icon(Icons.explore, color: AppColors.primary),
+            const SizedBox(width: 10),
+            Text(context.tr('app_name'), style: TextStyle(color: context.textPrimary)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Version 1.0.0',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('${context.tr('version')} 1.0.0',
+                style: TextStyle(fontWeight: FontWeight.bold, color: context.textPrimary)),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Management portal for TURIVA Tourism Platform.\n\n'
                   '© 2025 TURIVA. All rights reserved.',
+              style: TextStyle(color: context.textSecondary),
             ),
             const SizedBox(height: 15),
             Text('Made with ❤️ in Tanzania 🇹🇿',
-                style: TextStyle(color: Colors.grey.shade600)),
+                style: TextStyle(color: context.textSecondary)),
           ],
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Close')),
+              child: Text(context.tr('close'))),
         ],
       ),
     );

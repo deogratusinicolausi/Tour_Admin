@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/hotel_model.dart';
 import '../services/firestore_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import 'package:provider/provider.dart';
 import 'add_edit_hotel_screen.dart';
 
 class HotelsListScreen extends StatefulWidget {
@@ -27,17 +30,17 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Hotel?'),
-        content: Text('Are you sure you want to delete "${hotel.name}"?'),
+        title: Text(context.tr('delete_hotel_q')),
+        content: Text('${context.tr('confirm_delete')} "${hotel.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(context.tr('delete')),
           ),
         ],
       ),
@@ -48,8 +51,9 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-            Text(success ? '✅ Hotel deleted' : '❌ Failed to delete'),
+            content: Text(success
+                ? '✅ ${context.tr('hotel_deleted')}'
+                : '❌ ${context.tr('failed_delete')}'),
             backgroundColor: success ? Colors.green : Colors.red,
           ),
         );
@@ -72,9 +76,9 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('🏨 Hotels & Lodges'),
+        title: Text('🏨 ${context.tr('hotels')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -82,9 +86,9 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
         onPressed: () => _openAddEdit(),
         backgroundColor: AppColors.accentGold,
         icon: const Icon(Icons.add, color: Colors.black),
-        label: const Text(
-          'Add Hotel',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        label: Text(
+          context.tr('add_hotel'),
+          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
       body: Column(
@@ -97,7 +101,7 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
@@ -105,7 +109,7 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
                     onChanged: (v) =>
                         setState(() => _searchQuery = v.toLowerCase()),
                     decoration: InputDecoration(
-                      hintText: 'Search hotels...',
+                      hintText: context.tr('search_hotels'),
                       prefixIcon: const Icon(Icons.search),
                       border: InputBorder.none,
                       contentPadding:
@@ -141,7 +145,7 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          status.toUpperCase(),
+                          context.tr(status).toUpperCase(),
                           style: TextStyle(
                             color: isSelected ? Colors.black : Colors.white,
                             fontWeight: FontWeight.bold,
@@ -202,10 +206,10 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
           Icon(Icons.hotel, size: width * 0.2, color: Colors.grey.shade300),
           const SizedBox(height: 20),
           Text(
-            _searchQuery.isEmpty ? 'No hotels yet' : 'No results found',
+            _searchQuery.isEmpty ? context.tr('no_hotels') : context.tr('no_results'),
             style: TextStyle(
               fontSize: width * 0.05,
-              color: Colors.grey.shade600,
+              color: context.textSecondary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -218,7 +222,7 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: height * 0.015),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -285,13 +289,13 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
                         color: AppColors.accentGold,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.star, size: 14, color: Colors.black),
-                          SizedBox(width: 4),
+                          const Icon(Icons.star, size: 14, color: Colors.black),
+                          const SizedBox(width: 4),
                           Text(
-                            'FEATURED',
-                            style: TextStyle(
+                            context.tr('featured').toUpperCase(),
+                            style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
@@ -314,7 +318,7 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      hotel.status.toUpperCase(),
+                      context.tr(hotel.status).toUpperCase(),
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -338,14 +342,14 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
                   style: TextStyle(
                     fontSize: width * 0.045,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                    color: context.textPrimary,
                   ),
                 ),
                 SizedBox(height: height * 0.005),
                 Row(
                   children: [
                     Icon(Icons.location_on,
-                        size: width * 0.035, color: Colors.grey.shade500),
+                        size: width * 0.035, color: context.textSecondary),
                     SizedBox(width: width * 0.01),
                     Expanded(
                       child: Text(
@@ -353,7 +357,7 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
                             ? hotel.location
                             : hotel.destinationName,
                         style: TextStyle(
-                          color: Colors.grey.shade500,
+                          color: context.textSecondary,
                           fontSize: width * 0.03,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -392,7 +396,7 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
                     Expanded(
                       child: _buildActionButton(
                         icon: Icons.edit,
-                        label: 'Edit',
+                        label: context.tr('edit'),
                         color: Colors.blue,
                         onTap: () => _openAddEdit(hotel),
                         width: width,
@@ -402,7 +406,9 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
                     Expanded(
                       child: _buildActionButton(
                         icon: hotel.featured ? Icons.star : Icons.star_border,
-                        label: hotel.featured ? 'Unfeature' : 'Feature',
+                        label: hotel.featured
+                            ? context.tr('unfeature')
+                            : context.tr('feature'),
                         color: AppColors.accentGold,
                         onTap: () async {
                           await _firestoreService.toggleHotelFeatured(
@@ -415,7 +421,7 @@ class _HotelsListScreenState extends State<HotelsListScreen> {
                     Expanded(
                       child: _buildActionButton(
                         icon: Icons.delete,
-                        label: 'Delete',
+                        label: context.tr('delete'),
                         color: Colors.red,
                         onTap: () => _deleteHotel(hotel),
                         width: width,

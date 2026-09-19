@@ -7,6 +7,10 @@ import 'admin_chats_list_screen.dart';
 import 'bookings_list_screen.dart';
 import 'users_list_screen.dart';
 import 'destinations_list_screen.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import '../providers/app_theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class AdminNotificationsScreen extends StatefulWidget {
   const AdminNotificationsScreen({super.key});
@@ -31,21 +35,42 @@ class _AdminNotificationsScreenState
     {'value': 'user', 'label': '👥 Users'},
   ];
 
+  String _getFilterLabel(String value, BuildContext context) {
+    switch (value) {
+      case 'all':
+        return '🔔 ${context.tr('all')}';
+      case 'unread':
+        return '🔵 ${context.tr('unread')}';
+      case 'chat':
+        return '💬 ${context.tr('chats')}';
+      case 'booking':
+        return '📅 ${context.tr('bookings')}';
+      case 'order':
+        return '🛒 ${context.tr('orders')}';
+      case 'review':
+        return '⭐ ${context.tr('reviews')}';
+      case 'user':
+        return '👥 ${context.tr('users')}';
+      default:
+        return value;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('🔔 Notifications'),
+        title: Text('🔔 ${context.tr('notifications')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.done_all),
-            tooltip: 'Mark all read',
+            tooltip: context.tr('mark_all_read'),
             onPressed: () async {
               await _service.markAllAsRead();
               if (mounted) {
@@ -60,7 +85,7 @@ class _AdminNotificationsScreenState
           ),
           IconButton(
             icon: const Icon(Icons.delete_sweep),
-            tooltip: 'Clear all',
+            tooltip: context.tr('clear_all'),
             onPressed: () => _confirmClear(),
           ),
         ],
@@ -91,7 +116,7 @@ class _AdminNotificationsScreenState
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        f['label']!,
+                        _getFilterLabel(f['value']!, context),
                         style: TextStyle(
                           color:
                           isSelected ? Colors.black : Colors.white,
@@ -168,18 +193,18 @@ class _AdminNotificationsScreenState
           ),
           SizedBox(height: height * 0.03),
           Text(
-            'No notifications',
+            context.tr('no_notifications'),
             style: TextStyle(
               fontSize: width * 0.05,
               fontWeight: FontWeight.bold,
-              color: Colors.grey.shade700,
+              color: context.textPrimary,
             ),
           ),
           SizedBox(height: height * 0.01),
           Text(
-            'You\'re all caught up! 🎉',
+            '${context.tr('all_caught_up')} 🎉',
             style: TextStyle(
-              color: Colors.grey.shade500,
+              color: context.textSecondary,
               fontSize: width * 0.035,
             ),
           ),
@@ -218,12 +243,12 @@ class _AdminNotificationsScreenState
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Clear All?'),
-        content: const Text('Delete all admin notifications?'),
+        title: Text(context.tr('clear_all_title')),
+        content: Text(context.tr('clear_all_confirm')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.tr('cancel')),
           ),
           TextButton(
             onPressed: () async {
@@ -231,7 +256,7 @@ class _AdminNotificationsScreenState
               await _service.clearAll();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Clear'),
+            child: Text(context.tr('clear')),
           ),
         ],
       ),

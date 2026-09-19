@@ -7,6 +7,10 @@ import '../models/food_model.dart';
 import '../services/firestore_service.dart';
 import '../services/cloudinary_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import '../providers/app_theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class AddEditFoodScreen extends StatefulWidget {
   final FoodModel? food;
@@ -21,7 +25,6 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
   final _formKey = GlobalKey<FormState>();
   final _service = FirestoreService();
   final _cloudinary = CloudinaryService();
-
   final _nameController = TextEditingController();
   final _subCategoryController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -167,8 +170,8 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_imageUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please upload main image'),
+        SnackBar(
+          content: Text(context.tr('please_upload_image')),
           backgroundColor: Colors.orange,
         ),
       );
@@ -218,7 +221,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
     if (mounted && success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isEditing ? '✅ Updated!' : '✅ Added!'),
+          content: Text(isEditing ? '✅ ${context.tr('updated')}' : '✅ ${context.tr('added')}'),
           backgroundColor: Colors.green,
         ),
       );
@@ -250,9 +253,9 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: Text(isEditing ? '✏️ Edit Food' : '➕ Add Food'),
+        title: Text(isEditing ? '✏️ ${context.tr('edit_food')}' : '➕ ${context.tr('add_food')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -263,7 +266,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _sectionTitle('📸 Main Image', width),
+              _sectionTitle('📸 ${context.tr('main_image')}', width, context),
               SizedBox(height: height * 0.01),
               GestureDetector(
                 onTap:
@@ -272,7 +275,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
                   height: height * 0.25,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _imageUrl.isEmpty
@@ -295,11 +298,11 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
                     children: [
                       Icon(Icons.add_photo_alternate,
                           size: width * 0.15,
-                          color: Colors.grey.shade400),
+                          color: context.textSecondary),
                       SizedBox(height: height * 0.01),
-                      Text('Tap to upload',
+                      Text(context.tr('tap_to_upload'),
                           style: TextStyle(
-                              color: Colors.grey.shade600)),
+                              color: context.textSecondary)),
                     ],
                   )
                       : null,
@@ -307,7 +310,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
               ),
               SizedBox(height: height * 0.02),
 
-              _sectionTitle('🖼️ Gallery', width),
+              _sectionTitle('🖼️ ${context.tr('gallery')}', width, context),
               SizedBox(height: height * 0.01),
               SizedBox(
                 height: height * 0.12,
@@ -324,13 +327,14 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
                           width: height * 0.12,
                           margin: EdgeInsets.only(right: width * 0.02),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.cardBg,
                             borderRadius: BorderRadius.circular(12),
-                            border:
-                            Border.all(color: Colors.grey.shade300),
+                            border: Border.all(
+                              color: context.textSecondary.withOpacity(0.3),
+                            ),
                           ),
                           child: Icon(Icons.add,
-                              color: Colors.grey.shade400,
+                              color: context.textSecondary,
                               size: width * 0.08),
                         ),
                       );
@@ -373,7 +377,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
               SizedBox(height: height * 0.025),
 
               // CATEGORY
-              _sectionTitle('🍽️ Category', width),
+              _sectionTitle('🍽️ ${context.tr('category')}', width, context),
               SizedBox(height: height * 0.01),
               Wrap(
                 spacing: 8,
@@ -389,12 +393,12 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppColors.primary
-                            : Colors.white,
+                            : context.cardBg,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
                               ? AppColors.primary
-                              : Colors.grey.shade300,
+                              : context.textSecondary.withOpacity(0.3),
                           width: isSelected ? 2 : 1,
                         ),
                       ),
@@ -403,7 +407,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
                         style: TextStyle(
                           color: isSelected
                               ? Colors.white
-                              : Colors.grey.shade700,
+                              : context.textPrimary,
                           fontWeight: isSelected
                               ? FontWeight.bold
                               : FontWeight.normal,
@@ -417,47 +421,47 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
               SizedBox(height: height * 0.025),
 
               // BASIC INFO
-              _sectionTitle('📝 Basic Information', width),
+              _sectionTitle('📝 ${context.tr('basic_info')}', width, context),
               SizedBox(height: height * 0.01),
-              _buildField(_nameController, 'Name', Icons.restaurant,
-                  validator: (v) => v!.isEmpty ? 'Required' : null),
+              _buildField(context, _nameController, context.tr('name'), Icons.restaurant,
+                  validator: (v) => v!.isEmpty ? context.tr('required') : null),
               SizedBox(height: height * 0.015),
-              _buildField(_subCategoryController, 'Sub Category',
+              _buildField(context, _subCategoryController, context.tr('sub_category'),
                   Icons.category,
                   hint: 'e.g. Swahili, Maasai'),
               SizedBox(height: height * 0.015),
               Row(
                 children: [
                   Expanded(
-                    child: _buildField(
-                        _locationController, 'Location', Icons.location_on),
+                    child: _buildField(context,
+                        _locationController, context.tr('location'), Icons.location_on),
                   ),
                   SizedBox(width: width * 0.03),
                   Expanded(
-                    child: _buildField(
-                        _regionController, 'Region', Icons.map),
+                    child: _buildField(context,
+                        _regionController, context.tr('region'), Icons.map),
                   ),
                 ],
               ),
               SizedBox(height: height * 0.015),
-              _buildField(_descriptionController, 'Description',
+              _buildField(context, _descriptionController, context.tr('description'),
                   Icons.description,
                   maxLines: 4),
               SizedBox(height: height * 0.025),
 
               // DETAILS
-              _sectionTitle('ℹ️ Details', width),
+              _sectionTitle('ℹ️ ${context.tr('details')}', width, context),
               SizedBox(height: height * 0.01),
               Row(
                 children: [
                   Expanded(
-                    child: _buildField(
-                        _priceController, 'Price', Icons.attach_money,
+                    child: _buildField(context,
+                        _priceController, context.tr('price'), Icons.attach_money,
                         keyboardType: TextInputType.number),
                   ),
                   SizedBox(width: width * 0.03),
                   Expanded(
-                    child: _buildDropdown('Serving Time', _servingTime,
+                    child: _buildDropdown(context, context.tr('serving_time'), _servingTime,
                         _servingTimes, (v) {
                           setState(() => _servingTime = v!);
                         }),
@@ -465,28 +469,28 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
                 ],
               ),
               SizedBox(height: height * 0.015),
-              _buildDropdown('Spice Level', _spiceLevel, _spiceLevels, (v) {
+              _buildDropdown(context, context.tr('spice_level'), _spiceLevel, _spiceLevels, (v) {
                 setState(() => _spiceLevel = v!);
               }),
               SizedBox(height: height * 0.015),
-              _buildField(_restaurantController, 'Restaurant Name',
+              _buildField(context, _restaurantController, context.tr('restaurant_name'),
                   Icons.store),
               SizedBox(height: height * 0.015),
-              _buildField(
-                  _contactController, 'Contact Info', Icons.contact_phone,
+              _buildField(context,
+                  _contactController, context.tr('contact_info'), Icons.contact_phone,
                   hint: 'Phone, email'),
               SizedBox(height: height * 0.015),
               Row(
                 children: [
                   Expanded(
-                    child: _buildField(
-                        _latitudeController, 'Latitude', Icons.my_location,
+                    child: _buildField(context,
+                        _latitudeController, context.tr('latitude'), Icons.my_location,
                         keyboardType: TextInputType.number),
                   ),
                   SizedBox(width: width * 0.03),
                   Expanded(
-                    child: _buildField(
-                        _longitudeController, 'Longitude',
+                    child: _buildField(context,
+                        _longitudeController, context.tr('longitude'),
                         Icons.my_location,
                         keyboardType: TextInputType.number),
                   ),
@@ -495,7 +499,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
               SizedBox(height: height * 0.025),
 
               // DIETARY
-              _sectionTitle('🥗 Dietary Options', width),
+              _sectionTitle('🥗 ${context.tr('dietary_options')}', width, context),
               SizedBox(height: height * 0.01),
               Wrap(
                 spacing: 8,
@@ -519,12 +523,12 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? Colors.green
-                            : Colors.white,
+                            : context.cardBg,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
                               ? Colors.green
-                              : Colors.grey.shade300,
+                              : context.textSecondary.withOpacity(0.3),
                           width: isSelected ? 2 : 1,
                         ),
                       ),
@@ -533,7 +537,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
                         style: TextStyle(
                           color: isSelected
                               ? Colors.white
-                              : Colors.grey.shade700,
+                              : context.textPrimary,
                           fontWeight: isSelected
                               ? FontWeight.bold
                               : FontWeight.normal,
@@ -547,9 +551,10 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
               SizedBox(height: height * 0.025),
 
               // INGREDIENTS
-              _sectionTitle('🥘 Ingredients', width),
+              _sectionTitle('🥘 ${context.tr('ingredients')}', width, context),
               SizedBox(height: height * 0.01),
               _buildListBuilder(
+                context: context,
                 controller: _ingredientController,
                 items: _ingredients,
                 hint: 'e.g. Rice, Coconut milk',
@@ -563,9 +568,10 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
               SizedBox(height: height * 0.025),
 
               // PREPARATION
-              _sectionTitle('👨‍🍳 Preparation Steps', width),
+              _sectionTitle('👨‍🍳 ${context.tr('preparation_steps')}', width, context),
               SizedBox(height: height * 0.01),
               _buildListBuilder(
+                context: context,
                 controller: _preparationController,
                 items: _preparation,
                 hint: 'e.g. Boil water, Add rice',
@@ -581,9 +587,10 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
               SizedBox(height: height * 0.025),
 
               // BEST PAIRINGS
-              _sectionTitle('🍷 Best Pairings', width),
+              _sectionTitle('🍷 ${context.tr('best_pairings')}', width, context),
               SizedBox(height: height * 0.01),
               _buildListBuilder(
+                context: context,
                 controller: _pairingController,
                 items: _bestPairings,
                 hint: 'e.g. Fresh juice, Kachumbari',
@@ -599,12 +606,12 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
               SizedBox(height: height * 0.025),
 
               // RATING
-              _sectionTitle('⭐ Rating', width),
+              _sectionTitle('⭐ ${context.tr('rating')}', width, context),
               SizedBox(height: height * 0.01),
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -627,16 +634,16 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
               SizedBox(height: height * 0.025),
 
               // SETTINGS
-              _sectionTitle('⚙️ Settings', width),
+              _sectionTitle('⚙️ ${context.tr('settings')}', width, context),
               SizedBox(height: height * 0.01),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SwitchListTile(
-                  title: const Text('⭐ Featured',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text('⭐ ${context.tr('featured')}',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: context.textPrimary)),
                   value: _featured,
                   activeColor: AppColors.accentGold,
                   onChanged: (v) => setState(() => _featured = v),
@@ -646,7 +653,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -665,7 +672,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
                               ? (s == 'active'
                               ? Colors.green
                               : Colors.grey)
-                              : Colors.grey.shade200,
+                              : context.textSecondary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -673,7 +680,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
                           style: TextStyle(
                             color: isSelected
                                 ? Colors.white
-                                : Colors.grey.shade700,
+                                : context.textPrimary,
                             fontWeight: FontWeight.bold,
                             fontSize: width * 0.03,
                           ),
@@ -699,7 +706,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                    isEditing ? 'UPDATE FOOD' : 'ADD FOOD',
+                    isEditing ? context.tr('update_food').toUpperCase() : context.tr('add_food').toUpperCase(),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -716,18 +723,19 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
     );
   }
 
-  Widget _sectionTitle(String title, double width) {
+  Widget _sectionTitle(String title, double width, BuildContext context) {
     return Text(
       title,
       style: TextStyle(
         fontSize: width * 0.04,
         fontWeight: FontWeight.bold,
-        color: Colors.grey.shade800,
+        color: context.textPrimary,
       ),
     );
   }
 
   Widget _buildField(
+      BuildContext context,
       TextEditingController controller,
       String label,
       IconData icon, {
@@ -744,16 +752,18 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon),
+        prefixIcon: Icon(icon, color: context.textSecondary),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.cardBg,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(
+            color: context.textSecondary.withOpacity(0.3),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -764,6 +774,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
   }
 
   Widget _buildDropdown(
+      BuildContext context,
       String label,
       String value,
       List<String> options,
@@ -772,17 +783,24 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(
+          color: context.textSecondary.withOpacity(0.3),
+        ),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           isExpanded: true,
-          hint: Text(label),
+          hint: Text(label, style: TextStyle(color: context.textPrimary)),
           items: options
-              .map((o) => DropdownMenuItem(value: o, child: Text(o)))
+              .map((o) => DropdownMenuItem(
+                    value: o,
+                    child: Text(o,
+                        style: TextStyle(
+                            color: context.textPrimary)),
+                  ))
               .toList(),
           onChanged: onChanged,
         ),
@@ -791,6 +809,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
   }
 
   Widget _buildListBuilder({
+    required BuildContext context,
     required TextEditingController controller,
     required List<String> items,
     required String hint,
@@ -812,7 +831,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
                   hintText: hint,
                   prefixIcon: Icon(icon, color: color),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.cardBg,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -837,7 +856,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
               padding: EdgeInsets.symmetric(
                   horizontal: width * 0.03, vertical: height * 0.008),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -847,7 +866,7 @@ class _AddEditFoodScreenState extends State<AddEditFoodScreen> {
                   Expanded(
                     child: Text(
                       e.value,
-                      style: TextStyle(fontSize: width * 0.032),
+                      style: TextStyle(fontSize: width * 0.032, color: context.textPrimary),
                     ),
                   ),
                   IconButton(

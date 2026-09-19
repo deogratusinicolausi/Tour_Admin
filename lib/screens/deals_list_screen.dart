@@ -3,6 +3,10 @@ import '../models/deal_model.dart';
 import '../services/firestore_service.dart';
 import '../utils/colors.dart';
 import 'add_edit_deal_screen.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import '../providers/app_theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class DealsListScreen extends StatefulWidget {
   const DealsListScreen({super.key});
@@ -18,16 +22,16 @@ class _DealsListScreenState extends State<DealsListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Deal?'),
-        content: Text('Delete "${d.title}"?'),
+        title: Text(context.tr('delete_deal_query')),
+        content: Text('${context.tr('delete')} "${d.title}"?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(context.tr('cancel'))),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete')),
+              child: Text(context.tr('delete'))),
         ],
       ),
     );
@@ -36,7 +40,7 @@ class _DealsListScreenState extends State<DealsListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ok ? '✅ Deleted' : '❌ Failed'),
+            content: Text(ok ? '✅ ${context.tr('deleted')}' : '❌ ${context.tr('failed')}'),
             backgroundColor: ok ? Colors.green : Colors.red,
           ),
         );
@@ -50,9 +54,9 @@ class _DealsListScreenState extends State<DealsListScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('🎁 Special Deals'),
+        title: Text('🎁 ${context.tr('special_deals')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -65,8 +69,8 @@ class _DealsListScreenState extends State<DealsListScreen> {
         },
         backgroundColor: AppColors.accentGold,
         icon: const Icon(Icons.add, color: Colors.black),
-        label: const Text('Add Deal',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        label: Text(context.tr('add_deal'),
+            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
       ),
       body: StreamBuilder<List<DealModel>>(
         stream: _service.getDeals(),
@@ -83,10 +87,10 @@ class _DealsListScreenState extends State<DealsListScreen> {
                   Icon(Icons.card_giftcard,
                       size: width * 0.2, color: Colors.grey.shade300),
                   const SizedBox(height: 20),
-                  Text('No deals yet',
+                  Text(context.tr('no_deals_yet'),
                       style: TextStyle(
                           fontSize: width * 0.05,
-                          color: Colors.grey.shade600,
+                          color: context.textSecondary,
                           fontWeight: FontWeight.bold)),
                 ],
               ),
@@ -107,7 +111,7 @@ class _DealsListScreenState extends State<DealsListScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: height * 0.015),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -166,12 +170,12 @@ class _DealsListScreenState extends State<DealsListScreen> {
                         color: AppColors.accentGold,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.star, size: 14, color: Colors.black),
-                          SizedBox(width: 4),
-                          Text('FEATURED',
-                              style: TextStyle(
+                          const Icon(Icons.star, size: 14, color: Colors.black),
+                          const SizedBox(width: 4),
+                          Text(context.tr('featured'),
+                              style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black)),
@@ -192,7 +196,7 @@ class _DealsListScreenState extends State<DealsListScreen> {
                   style: TextStyle(
                     fontSize: width * 0.045,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                    color: context.textPrimary,
                   ),
                 ),
                 SizedBox(height: height * 0.005),
@@ -228,7 +232,7 @@ class _DealsListScreenState extends State<DealsListScreen> {
                     Expanded(
                       child: _btn(
                         icon: Icons.edit,
-                        label: 'Edit',
+                        label: context.tr('edit'),
                         color: Colors.blue,
                         onTap: () {
                           Navigator.push(
@@ -245,7 +249,7 @@ class _DealsListScreenState extends State<DealsListScreen> {
                     Expanded(
                       child: _btn(
                         icon: d.featured ? Icons.star : Icons.star_border,
-                        label: d.featured ? 'Unfeature' : 'Feature',
+                        label: d.featured ? context.tr('unfeature') : context.tr('feature'),
                         color: AppColors.accentGold,
                         onTap: () async {
                           await _service.toggleDealFeatured(d.id, !d.featured);
@@ -257,7 +261,7 @@ class _DealsListScreenState extends State<DealsListScreen> {
                     Expanded(
                       child: _btn(
                         icon: Icons.delete,
-                        label: 'Delete',
+                        label: context.tr('delete'),
                         color: Colors.red,
                         onTap: () => _delete(d),
                         width: width,

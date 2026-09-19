@@ -3,6 +3,10 @@ import '../models/food_model.dart';
 import '../services/firestore_service.dart';
 import '../utils/colors.dart';
 import 'add_edit_food_screen.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import '../providers/app_theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class FoodListScreen extends StatefulWidget {
   const FoodListScreen({super.key});
@@ -46,16 +50,16 @@ class _FoodListScreenState extends State<FoodListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Food?'),
-        content: Text('Are you sure you want to delete "${food.name}"?'),
+        title: Text(context.tr('delete_food')),
+        content: Text('${context.tr('delete_confirm')} "${food.name}"?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(context.tr('cancel'))),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete')),
+              child: Text(context.tr('delete'))),
         ],
       ),
     );
@@ -65,7 +69,7 @@ class _FoodListScreenState extends State<FoodListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ok ? '✅ Food deleted' : '❌ Failed'),
+            content: Text(ok ? '✅ ${context.tr('food_deleted')}' : '❌ ${context.tr('failed')}'),
             backgroundColor: ok ? Colors.green : Colors.red,
           ),
         );
@@ -141,9 +145,9 @@ class _FoodListScreenState extends State<FoodListScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('🍛 Food Management'),
+        title: Text('🍛 ${context.tr('food_management')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -151,10 +155,9 @@ class _FoodListScreenState extends State<FoodListScreen> {
         onPressed: () => _openAddEdit(),
         backgroundColor: AppColors.accentGold,
         icon: const Icon(Icons.add, color: Colors.black),
-        label: const Text(
-          'Add Food',
-          style:
-          TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        label: Text(
+          context.tr('add_food'),
+          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
       body: Column(
@@ -167,7 +170,7 @@ class _FoodListScreenState extends State<FoodListScreen> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
@@ -175,7 +178,7 @@ class _FoodListScreenState extends State<FoodListScreen> {
                     onChanged: (v) =>
                         setState(() => _searchQuery = v.toLowerCase()),
                     decoration: InputDecoration(
-                      hintText: 'Search food...',
+                      hintText: context.tr('search_food'),
                       prefixIcon: const Icon(Icons.search),
                       border: InputBorder.none,
                       contentPadding:
@@ -226,7 +229,7 @@ class _FoodListScreenState extends State<FoodListScreen> {
                               style: TextStyle(fontSize: width * 0.035)),
                           SizedBox(width: width * 0.01),
                           Text(
-                            cat['label'] as String,
+                            context.tr((cat['value'] as String).toLowerCase().replaceAll(' ', '_')).toUpperCase(),
                             style: TextStyle(
                               color: isSelected
                                   ? Colors.black
@@ -264,12 +267,20 @@ class _FoodListScreenState extends State<FoodListScreen> {
                           vertical: height * 0.006),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? Colors.white
+                            ? context.cardBg
                             : Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: Text(
-                        spice['label'] as String,
+                        spice['value'] == 'all'
+                            ? context.tr('all').toUpperCase()
+                            : spice['value'] == 'Mild'
+                                ? '🟢 ${context.tr('mild').toUpperCase()}'
+                                : spice['value'] == 'Medium'
+                                    ? '🟡 ${context.tr('medium').toUpperCase()}'
+                                    : spice['value'] == 'Hot'
+                                        ? '🟠 ${context.tr('hot').toUpperCase()}'
+                                        : '🔴 ${context.tr('very_hot').toUpperCase()}',
                         style: TextStyle(
                           color: isSelected
                               ? AppColors.primary
@@ -306,14 +317,14 @@ class _FoodListScreenState extends State<FoodListScreen> {
                 }).toList();
 
                 if (food.isEmpty) {
-                  return _buildEmptyState(width);
+                  return _buildEmptyState(context, width);
                 }
 
                 return ListView.builder(
                   padding: EdgeInsets.all(width * 0.04),
                   itemCount: food.length,
                   itemBuilder: (context, i) =>
-                      _buildFoodCard(food[i], width, height),
+                      _buildFoodCard(context, food[i], width, height),
                 );
               },
             ),
@@ -323,7 +334,7 @@ class _FoodListScreenState extends State<FoodListScreen> {
     );
   }
 
-  Widget _buildEmptyState(double width) {
+  Widget _buildEmptyState(BuildContext context, double width) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -332,24 +343,24 @@ class _FoodListScreenState extends State<FoodListScreen> {
               size: width * 0.2, color: Colors.grey.shade300),
           const SizedBox(height: 20),
           Text(
-            _searchQuery.isEmpty ? 'No food yet' : 'No results',
+            _searchQuery.isEmpty ? context.tr('no_food_yet') : context.tr('no_results'),
             style: TextStyle(
               fontSize: width * 0.05,
-              color: Colors.grey.shade600,
+              color: context.textSecondary,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            'Tap + to add food',
-            style: TextStyle(color: Colors.grey.shade400),
+            context.tr('tap_to_add_food'),
+            style: const TextStyle(color: Colors.blueGrey),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFoodCard(FoodModel food, double width, double height) {
+  Widget _buildFoodCard(BuildContext context, FoodModel food, double width, double height) {
     final categoryColor = _getCategoryColor(food.category);
     final categoryIcon = _getCategoryIcon(food.category);
     final spiceColor = _getSpiceColor(food.spiceLevel);
@@ -357,7 +368,7 @@ class _FoodListScreenState extends State<FoodListScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: height * 0.015),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -410,7 +421,7 @@ class _FoodListScreenState extends State<FoodListScreen> {
                             color: Colors.white, size: 12),
                         const SizedBox(width: 4),
                         Text(
-                          food.category.toUpperCase(),
+                          context.tr(food.category.toLowerCase().replaceAll(' ', '_')).toUpperCase(),
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -441,7 +452,7 @@ class _FoodListScreenState extends State<FoodListScreen> {
                               style: TextStyle(fontSize: 10)),
                           const SizedBox(width: 4),
                           Text(
-                            food.spiceLevel.toUpperCase(),
+                            context.tr(food.spiceLevel.toLowerCase().replaceAll(' ', '_')).toUpperCase(),
                             style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -470,7 +481,36 @@ class _FoodListScreenState extends State<FoodListScreen> {
                               size: 14, color: Colors.black),
                           SizedBox(width: 4),
                           Text(
-                            'FEATURED',
+                            'FEATURED', // usually untranslated token name or handled by context.tr('featured')
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                // Featured dynamic translate
+                if (food.featured)
+                  Positioned(
+                    bottom: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentGold,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.star,
+                              size: 14, color: Colors.black),
+                          const SizedBox(width: 4),
+                          Text(
+                            context.tr('featured').toUpperCase(),
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -516,7 +556,7 @@ class _FoodListScreenState extends State<FoodListScreen> {
                   style: TextStyle(
                     fontSize: width * 0.045,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                    color: context.textPrimary,
                   ),
                 ),
                 SizedBox(height: height * 0.005),
@@ -573,7 +613,7 @@ class _FoodListScreenState extends State<FoodListScreen> {
                     Expanded(
                       child: _actionBtn(
                         icon: Icons.edit,
-                        label: 'Edit',
+                        label: context.tr('edit'),
                         color: Colors.blue,
                         onTap: () => _openAddEdit(food),
                         width: width,
@@ -585,8 +625,7 @@ class _FoodListScreenState extends State<FoodListScreen> {
                         icon: food.featured
                             ? Icons.star
                             : Icons.star_border,
-                        label:
-                        food.featured ? 'Unfeature' : 'Feature',
+                        label: food.featured ? context.tr('unfeature') : context.tr('feature'),
                         color: AppColors.accentGold,
                         onTap: () async {
                           await _service.toggleFoodFeatured(
@@ -599,7 +638,7 @@ class _FoodListScreenState extends State<FoodListScreen> {
                     Expanded(
                       child: _actionBtn(
                         icon: Icons.delete,
-                        label: 'Delete',
+                        label: context.tr('delete'),
                         color: Colors.red,
                         onTap: () => _delete(food),
                         width: width,

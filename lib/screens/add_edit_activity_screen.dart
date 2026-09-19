@@ -7,6 +7,10 @@ import '../models/activity_model.dart';
 import '../services/firestore_service.dart';
 import '../services/cloudinary_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+
+
 
 class AddEditActivityScreen extends StatefulWidget {
   final ActivityModel? activity;
@@ -121,7 +125,7 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_imageUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload main image'), backgroundColor: Colors.orange),
+        SnackBar(content: Text(context.tr('please_upload_main_image')), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -157,7 +161,7 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
     if (mounted && success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isEditing ? '✅ Updated' : '✅ Added'),
+          content: Text(isEditing ? '✅ ${context.tr('updated')}' : '✅ ${context.tr('added')}'),
           backgroundColor: Colors.green,
         ),
       );
@@ -180,9 +184,9 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: Text(isEditing ? '✏️ Edit Activity' : '➕ Add Activity'),
+        title: Text(isEditing ? '✏️ ${context.tr('edit_activity')}' : '➕ ${context.tr('add_activity')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -193,7 +197,7 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTitle('📸 Main Image', width),
+              _buildTitle('📸 ${context.tr('main_image')}', width),
               SizedBox(height: height * 0.01),
               GestureDetector(
                 onTap: _isUploading ? null : () => _pickImage(isMain: true),
@@ -201,10 +205,10 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
                   height: height * 0.25,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: _imageUrl.isEmpty ? Colors.grey.shade300 : AppColors.primary,
+                      color: _imageUrl.isEmpty ? context.textSecondary.withOpacity(0.3) : AppColors.primary,
                       width: 2,
                     ),
                     image: _imageUrl.isNotEmpty
@@ -218,10 +222,10 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.add_photo_alternate,
-                          size: width * 0.15, color: Colors.grey.shade400),
+                          size: width * 0.15, color: context.textSecondary),
                       SizedBox(height: height * 0.01),
-                      Text('Tap to upload',
-                          style: TextStyle(color: Colors.grey.shade600)),
+                      Text(context.tr('tap_to_upload'),
+                          style: TextStyle(color: context.textSecondary)),
                     ],
                   )
                       : null,
@@ -229,7 +233,7 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
               ),
               SizedBox(height: height * 0.02),
 
-              _buildTitle('🖼️ Gallery', width),
+              _buildTitle('🖼️ ${context.tr('gallery')}', width),
               SizedBox(height: height * 0.01),
               SizedBox(
                 height: height * 0.12,
@@ -244,12 +248,12 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
                           width: height * 0.12,
                           margin: EdgeInsets.only(right: width * 0.02),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.cardBg,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300),
+                            border: Border.all(color: context.textSecondary.withOpacity(0.3)),
                           ),
                           child: Icon(Icons.add,
-                              color: Colors.grey.shade400, size: width * 0.08),
+                              color: context.textSecondary, size: width * 0.08),
                         ),
                       );
                     }
@@ -286,19 +290,19 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              _buildTitle('📝 Basic Information', width),
+              _buildTitle('📝 ${context.tr('basic_information')}', width),
               SizedBox(height: height * 0.01),
-              _buildField(_nameController, 'Activity Name', Icons.celebration,
-                  validator: (v) => v!.isEmpty ? 'Required' : null),
+              _buildField(_nameController, context.tr('activity_name'), Icons.celebration,
+                  validator: (v) => v!.isEmpty ? context.tr('required') : null),
               SizedBox(height: height * 0.015),
 
               DropdownButtonFormField<String>(
                 value: _destinationId.isEmpty ? null : _destinationId,
                 decoration: InputDecoration(
-                  labelText: 'Destination',
+                  labelText: context.tr('destination'),
                   prefixIcon: const Icon(Icons.place),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.cardBg,
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none),
@@ -306,7 +310,7 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
                 items: _destinations.map((d) {
                   return DropdownMenuItem<String>(
                     value: d['id'] as String,
-                    child: Text(d['name'] as String? ?? ''),
+                    child: Text(d['name'] as String? ?? '', style: TextStyle(color: context.textPrimary)),
                   );
                 }).toList(),
                 onChanged: (v) {
@@ -321,16 +325,16 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
               ),
               SizedBox(height: height * 0.015),
 
-              _buildField(_descriptionController, 'Description', Icons.description,
+              _buildField(_descriptionController, context.tr('description'), Icons.description,
                   maxLines: 4),
               SizedBox(height: height * 0.025),
 
-              _buildTitle('🎯 Activity Type', width),
+              _buildTitle('🎯 ${context.tr('activity_type')}', width),
               SizedBox(height: height * 0.01),
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Wrap(
@@ -343,7 +347,7 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primary : Colors.grey.shade100,
+                          color: isSelected ? AppColors.primary : context.pageBg,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -352,9 +356,9 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
                             Text(t['icon']!),
                             const SizedBox(width: 5),
                             Text(
-                              t['name']!,
+                              context.tr(t['name']!.toLowerCase()),
                               style: TextStyle(
-                                color: isSelected ? Colors.white : Colors.grey.shade700,
+                                color: isSelected ? Colors.white : context.textSecondary,
                                 fontSize: 12,
                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                               ),
@@ -368,15 +372,15 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              _buildTitle('💰 Pricing', width),
+              _buildTitle('💰 ${context.tr('pricing')}', width),
               SizedBox(height: height * 0.01),
               Row(
                 children: [
                   Expanded(
                     flex: 2,
-                    child: _buildField(_priceController, 'Price', Icons.attach_money,
+                    child: _buildField(_priceController, context.tr('price'), Icons.attach_money,
                         keyboardType: TextInputType.number,
-                        validator: (v) => v!.isEmpty ? 'Required' : null),
+                        validator: (v) => v!.isEmpty ? context.tr('required') : null),
                   ),
                   SizedBox(width: width * 0.03),
                   Expanded(
@@ -384,16 +388,16 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
                       padding: EdgeInsets.symmetric(
                           horizontal: width * 0.03, vertical: height * 0.02),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.cardBg,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
+                        border: Border.all(color: context.textSecondary.withOpacity(0.3)),
                       ),
                       child: DropdownButton<String>(
                         value: _currency,
                         isExpanded: true,
                         underline: const SizedBox(),
                         items: ['USD', 'TZS', 'EUR', 'GBP']
-                            .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                            .map((c) => DropdownMenuItem(value: c, child: Text(c, style: TextStyle(color: context.textPrimary))))
                             .toList(),
                         onChanged: (v) => setState(() => _currency = v ?? 'USD'),
                       ),
@@ -403,16 +407,16 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
               ),
               SizedBox(height: height * 0.015),
 
-              _buildField(_durationController, 'Duration', Icons.access_time,
-                  hint: 'e.g. 2 hours, Half day'),
+              _buildField(_durationController, context.tr('duration'), Icons.access_time,
+                  hint: context.tr('duration_hint')),
               SizedBox(height: height * 0.025),
 
-              _buildTitle('⭐ Rating', width),
+              _buildTitle('⭐ ${context.tr('rating')}', width),
               SizedBox(height: height * 0.01),
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                    color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    color: context.cardBg, borderRadius: BorderRadius.circular(12)),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(5, (index) {
@@ -429,14 +433,14 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              _buildTitle('⚙️ Settings', width),
+              _buildTitle('⚙️ ${context.tr('settings')}', width),
               SizedBox(height: height * 0.01),
               Container(
                 decoration: BoxDecoration(
-                    color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    color: context.cardBg, borderRadius: BorderRadius.circular(12)),
                 child: SwitchListTile(
-                  title: const Text('⭐ Featured',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text('⭐ ${context.tr('featured')}',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: context.textPrimary)),
                   value: _featured,
                   activeColor: AppColors.accentGold,
                   onChanged: (v) => setState(() => _featured = v),
@@ -447,7 +451,7 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                    color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    color: context.cardBg, borderRadius: BorderRadius.circular(12)),
                 child: Row(
                   children: ['active', 'inactive'].map((s) {
                     final isSelected = _status == s;
@@ -460,13 +464,13 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? (s == 'active' ? Colors.green : Colors.grey)
-                              : Colors.grey.shade200,
+                              : context.pageBg,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          s.toUpperCase(),
+                          context.tr(s).toUpperCase(),
                           style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.grey.shade700,
+                            color: isSelected ? Colors.white : context.textSecondary,
                             fontWeight: FontWeight.bold,
                             fontSize: width * 0.03,
                           ),
@@ -491,7 +495,7 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                    isEditing ? 'UPDATE ACTIVITY' : 'ADD ACTIVITY',
+                    isEditing ? context.tr('update_activity').toUpperCase() : context.tr('add_activity').toUpperCase(),
                     style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -512,7 +516,7 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
     style: TextStyle(
         fontSize: w * 0.04,
         fontWeight: FontWeight.bold,
-        color: Colors.grey.shade800),
+        color: context.textPrimary),
   );
 
   Widget _buildField(
@@ -527,6 +531,7 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
     return TextFormField(
       controller: c,
       validator: validator,
+      style: TextStyle(color: context.textPrimary),
       maxLines: maxLines,
       keyboardType: keyboardType,
       decoration: InputDecoration(
@@ -534,12 +539,12 @@ class _AddEditActivityScreenState extends State<AddEditActivityScreen> {
         hintText: hint,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.cardBg,
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300)),
+            borderSide: BorderSide(color: context.textSecondary.withOpacity(0.3))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: AppColors.primary, width: 2)),

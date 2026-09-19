@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/mountain_model.dart';
 import '../services/firestore_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import 'package:provider/provider.dart';
 import 'add_edit_mountain_screen.dart';
 
 class MountainsListScreen extends StatefulWidget {
@@ -28,17 +31,17 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Mountain?'),
-        content: Text(
-            'Are you sure you want to delete "${mountain.name}"?'),
+        backgroundColor: context.cardBg,
+        title: Text(context.tr('delete_mountain_q'), style: TextStyle(color: context.textPrimary)),
+        content: Text(context.tr('delete_confirm_msg'), style: TextStyle(color: context.textSecondary)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(context.tr('cancel'))),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete')),
+              child: Text(context.tr('delete'))),
         ],
       ),
     );
@@ -48,7 +51,7 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ok ? '✅ Mountain deleted' : '❌ Failed'),
+            content: Text(ok ? context.tr('mountain_deleted') : context.tr('failed')),
             backgroundColor: ok ? Colors.green : Colors.red,
           ),
         );
@@ -71,9 +74,9 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('🏔️ Mountains Management'),
+        title: Text(context.tr('mountains_management')),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -81,9 +84,9 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
         onPressed: () => _openAddEdit(),
         backgroundColor: AppColors.accentGold,
         icon: const Icon(Icons.add, color: Colors.black),
-        label: const Text(
-          'Add Mountain',
-          style:
+        label: Text(
+          context.tr('add_mountain'),
+          style: const
           TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
@@ -97,7 +100,7 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
@@ -105,8 +108,9 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
                     onChanged: (v) =>
                         setState(() => _searchQuery = v.toLowerCase()),
                     decoration: InputDecoration(
-                      hintText: 'Search mountains...',
-                      prefixIcon: const Icon(Icons.search),
+                      hintText: context.tr('search_mountains'),
+                      hintStyle: TextStyle(color: context.textSecondary),
+                      prefixIcon: Icon(Icons.search, color: context.textSecondary),
                       border: InputBorder.none,
                       contentPadding:
                       EdgeInsets.symmetric(vertical: height * 0.015),
@@ -128,13 +132,13 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _filterChip('all', 'ALL', _filterStatus, (v) {
+                      _filterChip('all', context.tr('all').toUpperCase(), _filterStatus, (v) {
                         setState(() => _filterStatus = v);
                       }, width, height),
-                      _filterChip('active', 'ACTIVE', _filterStatus, (v) {
+                      _filterChip('active', context.tr('active').toUpperCase(), _filterStatus, (v) {
                         setState(() => _filterStatus = v);
                       }, width, height),
-                      _filterChip('inactive', 'INACTIVE', _filterStatus, (v) {
+                      _filterChip('inactive', context.tr('inactive').toUpperCase(), _filterStatus, (v) {
                         setState(() => _filterStatus = v);
                       }, width, height),
                     ],
@@ -147,20 +151,20 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
                   child: Row(
                     children: [
                       _difficultyChip(
-                          'all', 'ALL LEVELS', _filterDifficulty, (v) {
+                          'all', context.tr('all_levels'), _filterDifficulty, (v) {
                         setState(() => _filterDifficulty = v);
                       }, width, height),
-                      _difficultyChip('Easy', '🟢 EASY', _filterDifficulty, (v) {
+                      _difficultyChip('Easy', '🟢 ${context.tr('easy')}', _filterDifficulty, (v) {
                         setState(() => _filterDifficulty = v);
                       }, width, height),
-                      _difficultyChip('Moderate', '🟡 MODERATE',
+                      _difficultyChip('Moderate', '🟡 ${context.tr('moderate')}',
                           _filterDifficulty, (v) {
                             setState(() => _filterDifficulty = v);
                           }, width, height),
-                      _difficultyChip('Hard', '🟠 HARD', _filterDifficulty, (v) {
+                      _difficultyChip('Hard', '🟠 ${context.tr('hard')}', _filterDifficulty, (v) {
                         setState(() => _filterDifficulty = v);
                       }, width, height),
-                      _difficultyChip('Extreme', '🔴 EXTREME',
+                      _difficultyChip('Extreme', '🔴 ${context.tr('extreme')}',
                           _filterDifficulty, (v) {
                             setState(() => _filterDifficulty = v);
                           }, width, height),
@@ -227,7 +231,7 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.accentGold
-              : Colors.white.withOpacity(0.2),
+              : context.cardBg.withOpacity(0.2),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
@@ -260,7 +264,7 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? Colors.white
-              : Colors.white.withOpacity(0.15),
+              : context.cardBg.withOpacity(0.15),
           borderRadius: BorderRadius.circular(15),
         ),
         child: Text(
@@ -284,10 +288,10 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
               size: width * 0.2, color: Colors.grey.shade300),
           const SizedBox(height: 20),
           Text(
-            _searchQuery.isEmpty ? 'No mountains yet' : 'No results',
+            _searchQuery.isEmpty ? context.tr('no_mountains') : context.tr('no_results'),
             style: TextStyle(
               fontSize: width * 0.05,
-              color: Colors.grey.shade600,
+              color: context.textSecondary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -316,7 +320,7 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: height * 0.015),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -341,13 +345,13 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
                     height: height * 0.2,
-                    color: Colors.grey.shade200,
+                    color: context.pageBg,
                     child: const Icon(Icons.broken_image, size: 40),
                   ),
                 )
                     : Container(
                   height: height * 0.2,
-                  color: Colors.grey.shade200,
+                  color: context.pageBg,
                   child: const Icon(Icons.terrain, size: 40),
                 ),
                 // Height badge
@@ -391,14 +395,14 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
                         color: AppColors.accentGold,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.star,
+                          const Icon(Icons.star,
                               size: 14, color: Colors.black),
-                          SizedBox(width: 4),
+                          const SizedBox(width: 4),
                           Text(
-                            'FEATURED',
-                            style: TextStyle(
+                            context.tr('featured').toUpperCase(),
+                            style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
@@ -420,7 +424,7 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      mountain.difficulty.toUpperCase(),
+                      context.tr(mountain.difficulty.toLowerCase()).toUpperCase(),
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -442,7 +446,7 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
                   style: TextStyle(
                     fontSize: width * 0.045,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                    color: context.textPrimary,
                   ),
                 ),
                 SizedBox(height: height * 0.005),
@@ -450,7 +454,7 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
                   children: [
                     Icon(Icons.location_on,
                         size: width * 0.035,
-                        color: Colors.grey.shade500),
+                        color: context.textSecondary),
                     SizedBox(width: width * 0.01),
                     Expanded(
                       child: Text(
@@ -458,7 +462,7 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
                             ? mountain.location
                             : mountain.country,
                         style: TextStyle(
-                          color: Colors.grey.shade500,
+                          color: context.textSecondary,
                           fontSize: width * 0.03,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -472,12 +476,12 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
                     children: [
                       Icon(Icons.access_time,
                           size: width * 0.035,
-                          color: Colors.grey.shade500),
+                          color: context.textSecondary),
                       SizedBox(width: width * 0.01),
                       Text(
                         mountain.duration,
                         style: TextStyle(
-                          color: Colors.grey.shade500,
+                          color: context.textSecondary,
                           fontSize: width * 0.03,
                         ),
                       ),
@@ -490,7 +494,7 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
                     Expanded(
                       child: _actionBtn(
                         icon: Icons.edit,
-                        label: 'Edit',
+                        label: context.tr('edit'),
                         color: Colors.blue,
                         onTap: () => _openAddEdit(mountain),
                         width: width,
@@ -503,8 +507,8 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
                             ? Icons.star
                             : Icons.star_border,
                         label: mountain.featured
-                            ? 'Unfeature'
-                            : 'Feature',
+                            ? context.tr('unfeature')
+                            : context.tr('feature'),
                         color: AppColors.accentGold,
                         onTap: () async {
                           await _service.toggleMountainFeatured(
@@ -517,7 +521,7 @@ class _MountainsListScreenState extends State<MountainsListScreen> {
                     Expanded(
                       child: _actionBtn(
                         icon: Icons.delete,
-                        label: 'Delete',
+                        label: context.tr('delete'),
                         color: Colors.red,
                         onTap: () => _delete(mountain),
                         width: width,

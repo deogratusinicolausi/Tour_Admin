@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../models/review_model.dart';
 import '../services/review_service.dart';
 import '../utils/colors.dart';
-import '../widgets/review_card_widget.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
 import '../widgets/review_analytics_widget.dart';
+import '../widgets/review_card_widget.dart';
 
 class AdminReviewsScreen extends StatefulWidget {
   const AdminReviewsScreen({super.key});
@@ -77,7 +79,7 @@ class _AdminReviewsScreenState extends State<AdminReviewsScreen> {
           children: [
             Icon(Icons.reply, color: AppColors.primary),
             const SizedBox(width: 10),
-            const Text('Reply to Review'),
+            Text(context.tr('reply_to_review')),
           ],
         ),
         content: Column(
@@ -87,7 +89,7 @@ class _AdminReviewsScreenState extends State<AdminReviewsScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: context.pageBg,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -105,7 +107,7 @@ class _AdminReviewsScreenState extends State<AdminReviewsScreen> {
                     review.comment,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey.shade700,
+                      color: context.textSecondary,
                     ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
@@ -118,7 +120,7 @@ class _AdminReviewsScreenState extends State<AdminReviewsScreen> {
               controller: controller,
               maxLines: 4,
               decoration: InputDecoration(
-                hintText: 'Write your reply...',
+                hintText: context.tr('write_reply'),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -129,15 +131,15 @@ class _AdminReviewsScreenState extends State<AdminReviewsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.tr('cancel')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
             ),
-            child: const Text('Send Reply',
-                style: TextStyle(color: Colors.white)),
+            child: Text(context.tr('send_reply'),
+                style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -149,7 +151,7 @@ class _AdminReviewsScreenState extends State<AdminReviewsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Reply sent to user!'),
+            content: Text('✅ Reply sent!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -161,18 +163,18 @@ class _AdminReviewsScreenState extends State<AdminReviewsScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Review?'),
+        title: Text(context.tr('delete_review')),
         content: Text(
             'Delete ${review.userName}\'s review of ${review.itemName}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(context.tr('delete')),
           ),
         ],
       ),
@@ -198,163 +200,172 @@ class _AdminReviewsScreenState extends State<AdminReviewsScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('⭐ Reviews Management'),
+        title: Text('⭐ ${context.tr('reviews_mgmt')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
-      body: Column(
-        children: [
-          // STATS
-          _buildStats(width, height),
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                // STATS
+                _buildStats(width, height),
 
-          // SEARCH
-          Container(
-            padding: EdgeInsets.symmetric(
-                horizontal: width * 0.04, vertical: height * 0.01),
-            color: AppColors.primary,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (v) =>
-                    setState(() => _searchQuery = v.toLowerCase()),
-                decoration: InputDecoration(
-                  hintText: 'Search reviews...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: InputBorder.none,
-                  contentPadding:
-                  EdgeInsets.symmetric(vertical: height * 0.015),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() => _searchQuery = '');
-                    },
-                  )
-                      : null,
-                ),
-              ),
-            ),
-          ),
-
-          // QUICK CHIPS
-          Container(
-            padding: EdgeInsets.symmetric(
-                horizontal: width * 0.04, vertical: height * 0.008),
-            color: AppColors.primary,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _quickChip(
-                    '⭐ Featured',
-                    _showFeaturedOnly,
-                        () => setState(
-                            () => _showFeaturedOnly = !_showFeaturedOnly),
-                  ),
-                  _quickChip(
-                    '📸 With Photos',
-                    _showWithPhotosOnly,
-                        () => setState(
-                            () => _showWithPhotosOnly = !_showWithPhotosOnly),
-                  ),
-                  _quickChip(
-                    '💬 Unreplied',
-                    _showUnrepliedOnly,
-                        () => setState(
-                            () => _showUnrepliedOnly = !_showUnrepliedOnly),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // ANALYTICS
-          if (_stats.isNotEmpty)
-            Container(
-              padding: EdgeInsets.all(width * 0.04),
-              color: AppColors.background,
-              child: ReviewAnalyticsWidget(stats: _stats),
-            ),
-
-          // RATING FILTER
-          Container(
-            padding: EdgeInsets.symmetric(
-                horizontal: width * 0.04, vertical: height * 0.008),
-            color: AppColors.primary,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: ['all', '5', '4', '3', '2', '1'].map((r) {
-                  final isSelected = _filterRating == r;
-                  return GestureDetector(
-                    onTap: () =>
-                        setState(() => _filterRating = r),
-                    child: Container(
-                      margin: EdgeInsets.only(right: width * 0.02),
-                      padding: EdgeInsets.symmetric(
-                          horizontal: width * 0.035,
-                          vertical: height * 0.006),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.accentGold
-                            : Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Text(
-                        r == 'all' ? 'All Ratings' : '$r ⭐',
-                        style: TextStyle(
-                          color:
-                          isSelected ? Colors.black : Colors.white70,
-                          fontWeight: FontWeight.bold,
-                          fontSize: width * 0.024,
-                        ),
+                // SEARCH
+                Container(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: width * 0.04, vertical: height * 0.01),
+                  color: AppColors.primary,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: context.cardBg,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (v) =>
+                          setState(() => _searchQuery = v.toLowerCase()),
+                      style: TextStyle(color: context.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: context.tr('search_reviews'),
+                        prefixIcon: const Icon(Icons.search),
+                        border: InputBorder.none,
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: height * 0.015),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                },
+                              )
+                            : null,
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
+                  ),
+                ),
+
+                // QUICK CHIPS
+                Container(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: width * 0.04, vertical: height * 0.008),
+                  color: AppColors.primary,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _quickChip(
+                          '⭐ ${context.tr('featured')}',
+                          _showFeaturedOnly,
+                          () => setState(
+                              () => _showFeaturedOnly = !_showFeaturedOnly),
+                        ),
+                        _quickChip(
+                          '📸 ${context.tr('with_photos')}',
+                          _showWithPhotosOnly,
+                          () => setState(() =>
+                              _showWithPhotosOnly = !_showWithPhotosOnly),
+                        ),
+                        _quickChip(
+                          '💬 ${context.tr('unreplied')}',
+                          _showUnrepliedOnly,
+                          () => setState(
+                              () => _showUnrepliedOnly = !_showUnrepliedOnly),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // ANALYTICS
+                if (_stats.isNotEmpty)
+                  Container(
+                    padding: EdgeInsets.all(width * 0.04),
+                    color: context.pageBg,
+                    child: ReviewAnalyticsWidget(stats: _stats),
+                  ),
+
+                // RATING FILTER
+                Container(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: width * 0.04, vertical: height * 0.008),
+                  color: AppColors.primary,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: ['all', '5', '4', '3', '2', '1'].map((r) {
+                        final isSelected = _filterRating == r;
+                        return GestureDetector(
+                          onTap: () => setState(() => _filterRating = r),
+                          child: Container(
+                            margin: EdgeInsets.only(right: width * 0.02),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: width * 0.035,
+                                vertical: height * 0.006),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.accentGold
+                                  : Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Text(
+                              r == 'all' ? context.tr('all_ratings') : '$r ⭐',
+                              style: TextStyle(
+                                color: isSelected ? Colors.black : Colors.white70,
+                                fontWeight: FontWeight.bold,
+                                fontSize: width * 0.024,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
           // LIST
-          Expanded(
-            child: StreamBuilder<List<ReviewModel>>(
-              stream: _service.getAllReviews(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+          StreamBuilder<List<ReviewModel>>(
+            stream: _service.getAllReviews(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()));
+              }
 
-                final reviews = _filter(snapshot.data ?? []);
+              final reviews = _filter(snapshot.data ?? []);
 
-                if (reviews.isEmpty) {
-                  return _buildEmptyState(width, height);
-                }
+              if (reviews.isEmpty) {
+                return SliverFillRemaining(
+                    child: _buildEmptyState(width, height));
+              }
 
-                return ListView.builder(
-                  padding: EdgeInsets.all(width * 0.04),
-                  itemCount: reviews.length,
-                  itemBuilder: (context, i) => ReviewCard(
-                    review: reviews[i],
-                    onTap: () => _replyToReview(reviews[i]),
-                    onReply: () => _replyToReview(reviews[i]),
-                    onFeature: () async {
-                      await _service.toggleFeatured(
-                          reviews[i].id, !reviews[i].featured);
-                      _loadStats();
-                    },
-                    onDelete: () => _deleteReview(reviews[i]),
+              return SliverPadding(
+                padding: EdgeInsets.all(width * 0.04),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => ReviewCard(
+                      review: reviews[i],
+                      onTap: () => _replyToReview(reviews[i]),
+                      onReply: () => _replyToReview(reviews[i]),
+                      onFeature: () async {
+                        await _service.toggleFeatured(
+                            reviews[i].id, !reviews[i].featured);
+                        _loadStats();
+                      },
+                      onDelete: () => _deleteReview(reviews[i]),
+                    ),
+                    childCount: reviews.length,
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -394,7 +405,7 @@ class _AdminReviewsScreenState extends State<AdminReviewsScreen> {
                       ),
                       SizedBox(height: height * 0.005),
                       Text(
-                        '${_stats['total'] ?? 0} reviews',
+                        '${_stats['total'] ?? 0} ${context.tr('reviews')}',
                         style: TextStyle(
                           color: Colors.white70,
                           fontSize: width * 0.028,
@@ -413,18 +424,18 @@ class _AdminReviewsScreenState extends State<AdminReviewsScreen> {
                     Row(
                       children: [
                         _smallStat(
-                            '✅', '${_stats['verified'] ?? 0}', 'Verified'),
+                            '✅', '${_stats['verified'] ?? 0}', context.tr('verified')),
                         _smallStat(
-                            '📸', '${_stats['withPhotos'] ?? 0}', 'Photos'),
+                            '📸', '${_stats['withPhotos'] ?? 0}', context.tr('photos')),
                       ],
                     ),
                     SizedBox(height: height * 0.01),
                     Row(
                       children: [
                         _smallStat(
-                            '💬', '${_stats['replied'] ?? 0}', 'Replied'),
+                            '💬', '${_stats['replied'] ?? 0}', context.tr('replied')),
                         _smallStat(
-                            '⭐', '${_stats['featured'] ?? 0}', 'Featured'),
+                            '⭐', '${_stats['featured'] ?? 0}', context.tr('featured')),
                       ],
                     ),
                   ],
@@ -445,7 +456,7 @@ class _AdminReviewsScreenState extends State<AdminReviewsScreen> {
         padding: EdgeInsets.symmetric(
             horizontal: width * 0.02, vertical: width * 0.02),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.12),
+          color: context.cardBg.withOpacity(0.12),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -500,21 +511,23 @@ class _AdminReviewsScreenState extends State<AdminReviewsScreen> {
 
   Widget _buildEmptyState(double width, double height) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.rate_review,
-              size: width * 0.2, color: Colors.grey.shade300),
-          SizedBox(height: height * 0.02),
-          Text(
-            'No reviews found',
-            style: TextStyle(
-              fontSize: width * 0.05,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.bold,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.rate_review,
+                size: width * 0.2, color: context.textSecondary.withOpacity(0.3)),
+            SizedBox(height: height * 0.02),
+            Text(
+              context.tr('no_reviews_found'),
+              style: TextStyle(
+                fontSize: width * 0.05,
+                color: context.textSecondary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

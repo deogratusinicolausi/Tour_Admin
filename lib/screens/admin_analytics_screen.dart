@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/payment_service.dart';
 import '../utils/colors.dart';
 import '../widgets/analytics_charts.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import '../providers/app_theme_provider.dart';
 
 class AdminAnalyticsScreen extends StatefulWidget {
   const AdminAnalyticsScreen({super.key});
@@ -59,9 +63,9 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('📊 Analytics'),
+        title: Text('📊 ${context.tr('analytics')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         actions: [

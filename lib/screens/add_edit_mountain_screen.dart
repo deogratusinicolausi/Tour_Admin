@@ -7,6 +7,8 @@ import '../models/mountain_model.dart';
 import '../services/firestore_service.dart';
 import '../services/cloudinary_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
 
 class AddEditMountainScreen extends StatefulWidget {
   final MountainModel? mountain;
@@ -225,16 +227,16 @@ class _AddEditMountainScreenState extends State<AddEditMountainScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: Text(isEditing ? '✏️ Edit Mountain' : '➕ Add Mountain'),
+        title: Text(isEditing ? context.tr('edit_mountain') : context.tr('add_mountain')),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(width * 0.05),
+          padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.02),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -248,7 +250,7 @@ class _AddEditMountainScreenState extends State<AddEditMountainScreen> {
                   height: height * 0.25,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _imageUrl.isEmpty
@@ -275,7 +277,7 @@ class _AddEditMountainScreenState extends State<AddEditMountainScreen> {
                       SizedBox(height: height * 0.01),
                       Text('Tap to upload',
                           style: TextStyle(
-                              color: Colors.grey.shade600)),
+                              color: context.textSecondary)),
                     ],
                   )
                       : null,
@@ -300,7 +302,7 @@ class _AddEditMountainScreenState extends State<AddEditMountainScreen> {
                           width: height * 0.12,
                           margin: EdgeInsets.only(right: width * 0.02),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.cardBg,
                             borderRadius: BorderRadius.circular(12),
                             border:
                             Border.all(color: Colors.grey.shade300),
@@ -482,7 +484,7 @@ class _AddEditMountainScreenState extends State<AddEditMountainScreen> {
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -509,7 +511,7 @@ class _AddEditMountainScreenState extends State<AddEditMountainScreen> {
               SizedBox(height: height * 0.01),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SwitchListTile(
@@ -524,7 +526,7 @@ class _AddEditMountainScreenState extends State<AddEditMountainScreen> {
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -600,7 +602,7 @@ class _AddEditMountainScreenState extends State<AddEditMountainScreen> {
       style: TextStyle(
         fontSize: width * 0.04,
         fontWeight: FontWeight.bold,
-        color: Colors.grey.shade800,
+        color: context.textPrimary,
       ),
     );
   }
@@ -624,7 +626,7 @@ class _AddEditMountainScreenState extends State<AddEditMountainScreen> {
         hintText: hint,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.cardBg,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -650,7 +652,7 @@ class _AddEditMountainScreenState extends State<AddEditMountainScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade300),
       ),
@@ -690,7 +692,7 @@ class _AddEditMountainScreenState extends State<AddEditMountainScreen> {
                   hintText: hint,
                   prefixIcon: Icon(icon, color: color),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.cardBg,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -715,7 +717,7 @@ class _AddEditMountainScreenState extends State<AddEditMountainScreen> {
               padding: EdgeInsets.symmetric(
                   horizontal: width * 0.03, vertical: height * 0.008),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(

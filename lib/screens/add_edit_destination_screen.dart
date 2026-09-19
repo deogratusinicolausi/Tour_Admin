@@ -7,6 +7,9 @@ import '../models/destination_model.dart';
 import '../services/firestore_service.dart';
 import '../services/cloudinary_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+
 
 class AddEditDestinationScreen extends StatefulWidget {
   final DestinationModel? destination;
@@ -105,16 +108,16 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Image uploaded!'),
+          SnackBar(
+            content: Text(context.tr('image_uploaded')),
             backgroundColor: Colors.green,
           ),
         );
       } else {
         setState(() => _isUploading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ Upload failed'),
+          SnackBar(
+            content: Text(context.tr('upload_failed')),
             backgroundColor: Colors.red,
           ),
         );
@@ -132,8 +135,8 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
 
     if (_imageUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please upload a main image'),
+        SnackBar(
+          content: Text(context.tr('upload_main_image_error')),
           backgroundColor: Colors.orange,
         ),
       );
@@ -173,16 +176,16 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(isEditing
-                ? '✅ Destination updated!'
-                : '✅ Destination added!'),
+                ? context.tr('destination_updated')
+                : context.tr('destination_added')),
             backgroundColor: Colors.green,
           ),
         );
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ Failed to save'),
+          SnackBar(
+            content: Text(context.tr('failed_to_save')),
             backgroundColor: Colors.red,
           ),
         );
@@ -208,9 +211,9 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: Text(isEditing ? '✏️ Edit Destination' : '➕ Add Destination'),
+        title: Text(isEditing ? '✏️ ${context.tr('edit_destination')}' : '➕ ${context.tr('add_destination')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         actions: [
@@ -241,7 +244,7 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ===== MAIN IMAGE =====
-              _buildSectionTitle('📸 Main Image', width),
+              _buildSectionTitle('📸 ${context.tr('main_image')}', width, context),
               SizedBox(height: height * 0.01),
               GestureDetector(
                 onTap: _isUploading ? null : () => _pickAndUploadImage(isMain: true),
@@ -249,7 +252,7 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
                   height: height * 0.25,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _imageUrl.isEmpty
@@ -278,8 +281,8 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
                           color: Colors.grey.shade400),
                       SizedBox(height: height * 0.01),
                       Text(
-                        'Tap to upload main image',
-                        style: TextStyle(color: Colors.grey.shade600),
+                        context.tr('tap_to_upload'),
+                        style: TextStyle(color: context.textSecondary),
                       ),
                     ],
                   )
@@ -289,7 +292,7 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
               SizedBox(height: height * 0.025),
 
               // ===== GALLERY =====
-              _buildSectionTitle('🖼️ Gallery (Optional)', width),
+              _buildSectionTitle('🖼️ ${context.tr('gallery_optional')}', width, context),
               SizedBox(height: height * 0.01),
               SizedBox(
                 height: height * 0.12,
@@ -306,7 +309,7 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
                           width: height * 0.12,
                           margin: EdgeInsets.only(right: width * 0.02),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.cardBg,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: Colors.grey.shade300),
                           ),
@@ -357,14 +360,15 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
               SizedBox(height: height * 0.025),
 
               // ===== BASIC INFO =====
-              _buildSectionTitle('📝 Basic Information', width),
+              _buildSectionTitle('📝 ${context.tr('basic_info')}', width, context),
               SizedBox(height: height * 0.01),
 
               _buildTextField(
                 controller: _nameController,
-                label: 'Name',
+                label: context.tr('name'),
                 icon: Icons.place,
-                validator: (v) => v!.isEmpty ? 'Name required' : null,
+                validator: (v) => v!.isEmpty ? context.tr('name_required') : null,
+                context: context,
               ),
               SizedBox(height: height * 0.015),
 
@@ -373,17 +377,19 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
                   Expanded(
                     child: _buildTextField(
                       controller: _countryController,
-                      label: 'Country',
+                      label: context.tr('country'),
                       icon: Icons.flag,
-                      validator: (v) => v!.isEmpty ? 'Country required' : null,
+                      validator: (v) => v!.isEmpty ? context.tr('country_required') : null,
+                      context: context,
                     ),
                   ),
                   SizedBox(width: width * 0.03),
                   Expanded(
                     child: _buildTextField(
                       controller: _regionController,
-                      label: 'Region',
+                      label: context.tr('region'),
                       icon: Icons.map,
+                      context: context,
                     ),
                   ),
                 ],
@@ -392,21 +398,23 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
 
               _buildTextField(
                 controller: _locationController,
-                label: 'Location',
+                label: context.tr('location'),
                 icon: Icons.location_on,
+                context: context,
               ),
               SizedBox(height: height * 0.015),
 
               _buildTextField(
                 controller: _descriptionController,
-                label: 'Description',
+                label: context.tr('description'),
                 icon: Icons.description,
                 maxLines: 4,
+                context: context,
               ),
               SizedBox(height: height * 0.025),
 
               // ===== COORDINATES =====
-              _buildSectionTitle('📍 GPS Coordinates (Optional)', width),
+              _buildSectionTitle('📍 ${context.tr('gps_coordinates')}', width, context),
               SizedBox(height: height * 0.01),
 
               Row(
@@ -414,18 +422,20 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
                   Expanded(
                     child: _buildTextField(
                       controller: _latitudeController,
-                      label: 'Latitude',
+                      label: context.tr('latitude'),
                       icon: Icons.my_location,
                       keyboardType: TextInputType.number,
+                      context: context,
                     ),
                   ),
                   SizedBox(width: width * 0.03),
                   Expanded(
                     child: _buildTextField(
                       controller: _longitudeController,
-                      label: 'Longitude',
+                      label: context.tr('longitude'),
                       icon: Icons.my_location,
                       keyboardType: TextInputType.number,
+                      context: context,
                     ),
                   ),
                 ],
@@ -433,22 +443,22 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
               SizedBox(height: height * 0.025),
 
               // ===== SETTINGS =====
-              _buildSectionTitle('⚙️ Settings', width),
+              _buildSectionTitle('⚙️ ${context.tr('settings')}', width, context),
               SizedBox(height: height * 0.01),
 
               // Featured
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SwitchListTile(
-                  title: const Text(
-                    '⭐ Featured',
+                  title: Text(
+                    '⭐ ${context.tr('featured')}',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: const Text('Show on homepage'),
+                  subtitle: Text(context.tr('show_on_homepage')),
                   value: _featured,
                   activeColor: AppColors.accentGold,
                   onChanged: (v) => setState(() => _featured = v),
@@ -460,14 +470,14 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Status',
+                    Text(
+                      context.tr('status'),
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: height * 0.01),
@@ -495,7 +505,7 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
                               style: TextStyle(
                                 color: isSelected
                                     ? Colors.white
-                                    : Colors.grey.shade700,
+                                    : context.textSecondary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: width * 0.03,
                               ),
@@ -524,7 +534,7 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                    isEditing ? 'UPDATE DESTINATION' : 'ADD DESTINATION',
+                    isEditing ? context.tr('update_destination').toUpperCase() : context.tr('add_destination').toUpperCase(),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -541,13 +551,13 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title, double width) {
+  Widget _buildSectionTitle(String title, double width, BuildContext context) {
     return Text(
       title,
       style: TextStyle(
         fontSize: width * 0.04,
         fontWeight: FontWeight.bold,
-        color: Colors.grey.shade800,
+        color: context.textPrimary,
       ),
     );
   }
@@ -558,6 +568,7 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
     required IconData icon,
     String? Function(String?)? validator,
     int maxLines = 1,
+    required BuildContext context,
     TextInputType? keyboardType,
   }) {
     return TextFormField(
@@ -569,7 +580,7 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
         labelText: label,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.cardBg,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

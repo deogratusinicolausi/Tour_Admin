@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/export_service.dart';
-import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import '../providers/app_theme_provider.dart';
 
 class ExportReportsScreen extends StatefulWidget {
   const ExportReportsScreen({super.key});
@@ -70,7 +73,7 @@ class _ExportReportsScreenState extends State<ExportReportsScreen> {
     {
       'key': 'activities',
       'title': 'Activities',
-      'subtitle': 'All activities',
+      'subtitle': 'All platform activities',
       'icon': '🎯',
       'color': Color(0xFFff9a9e),
       'type': 'collection',
@@ -135,6 +138,7 @@ class _ExportReportsScreenState extends State<ExportReportsScreen> {
     return showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        backgroundColor: context.cardBg,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -150,25 +154,25 @@ class _ExportReportsScreenState extends State<ExportReportsScreen> {
                   color: Colors.green, size: 28),
             ),
             const SizedBox(width: 12),
-            const Text('Success!'),
+            Text(context.tr('success')),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('$title report generated',
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(context.tr('report_generated').replaceAll('{title}', title),
+                style: TextStyle(fontWeight: FontWeight.bold, color: context.textPrimary)),
             const SizedBox(height: 10),
             Text(
               format == 'csv'
                   ? '📄 CSV file saved'
                   : '📕 PDF file saved',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              style: TextStyle(color: context.textSecondary, fontSize: 13),
             ),
             const SizedBox(height: 20),
-            const Text('What to do next:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            Text(context.tr('next_steps'),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: context.textPrimary)),
             const SizedBox(height: 10),
             _actionRow(
               Icons.share,
@@ -193,7 +197,7 @@ class _ExportReportsScreenState extends State<ExportReportsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(context.tr('close')),
           ),
         ],
       ),
@@ -209,23 +213,23 @@ class _ExportReportsScreenState extends State<ExportReportsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.primary, size: 24),
+            Icon(icon, color: Theme.of(context).primaryColor, size: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 14)),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 14, color: context.textPrimary)),
                   Text(subtitle,
                       style: TextStyle(
-                          color: Colors.grey.shade500, fontSize: 11)),
+                          color: context.textSecondary, fontSize: 11)),
                 ],
               ),
             ),
             Icon(Icons.arrow_forward_ios,
-                color: Colors.grey.shade400, size: 14),
+                color: context.textSecondary.withOpacity(0.5), size: 14),
           ],
         ),
       ),
@@ -276,11 +280,11 @@ class _ExportReportsScreenState extends State<ExportReportsScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('📤 Export Reports'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        title: Text('📤 ${context.tr('export_reports')}'),
+        backgroundColor: Theme.of(context).primaryColor,
+        elevation: 0,
       ),
       body: ListView(
         padding: EdgeInsets.all(width * 0.04),
@@ -289,11 +293,15 @@ class _ExportReportsScreenState extends State<ExportReportsScreen> {
           Container(
             padding: EdgeInsets.all(width * 0.05),
             decoration: BoxDecoration(
-              gradient: AppColors.mainGradient,
+              gradient: LinearGradient(
+                colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: Theme.of(context).primaryColor.withOpacity(0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -308,9 +316,9 @@ class _ExportReportsScreenState extends State<ExportReportsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Export Data',
-                        style: TextStyle(
+                      Text(
+                        context.tr('export_data'),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -318,10 +326,10 @@ class _ExportReportsScreenState extends State<ExportReportsScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Download as PDF or CSV',
+                        context.tr('download_formats'),
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.8),
-                          fontSize: 13,
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -348,7 +356,7 @@ class _ExportReportsScreenState extends State<ExportReportsScreen> {
       margin: EdgeInsets.only(bottom: height * 0.015),
       padding: EdgeInsets.all(width * 0.04),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -383,7 +391,7 @@ class _ExportReportsScreenState extends State<ExportReportsScreen> {
                       style: TextStyle(
                         fontSize: width * 0.04,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade800,
+                        color: context.textPrimary,
                       ),
                     ),
                     SizedBox(height: height * 0.003),
@@ -391,7 +399,7 @@ class _ExportReportsScreenState extends State<ExportReportsScreen> {
                       r['subtitle'] as String,
                       style: TextStyle(
                         fontSize: width * 0.028,
-                        color: Colors.grey.shade500,
+                        color: context.textSecondary,
                       ),
                     ),
                   ],

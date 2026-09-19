@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import '../models/user_model2.dart';import '../services/user_service.dart';
+import '../models/user_model2.dart';
+import '../services/user_service.dart';
 import '../utils/colors.dart';
 import '../widgets/user_card_widget.dart';
 import 'admin_user_detail_screen.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
@@ -65,7 +68,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                ok ? '✅ Role changed to $role' : '❌ Failed to change role'),
+                ok ? '${context.tr('role_changed')} $role' : context.tr('failed_to_change_role')),
             backgroundColor: ok ? Colors.green : Colors.red,
           ),
         );
@@ -81,8 +84,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       final ok = await _service.unbanUser(user.uid);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ok ? '✅ User unbanned' : '❌ Failed'),
+            SnackBar(
+            content: Text(ok ? context.tr('user_unbanned') : context.tr('failed')),
             backgroundColor: ok ? Colors.green : Colors.red,
           ),
         );
@@ -93,17 +96,17 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       final confirm = await showDialog<bool>(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text('🚫 Ban User?'),
+          title: Text(context.tr('ban_user_title')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Ban ${user.name}?'),
+              Text('${context.tr('ban')} ${user.name}?'),
               const SizedBox(height: 15),
               TextField(
                 controller: reasonController,
-                decoration: const InputDecoration(
-                  labelText: 'Reason',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.tr('reason'),
+                  border: const OutlineInputBorder(),
                 ),
                 maxLines: 2,
               ),
@@ -112,7 +115,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(context.tr('cancel')),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
@@ -133,7 +136,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(ok ? '🚫 User banned' : '❌ Failed'),
+              content: Text(ok ? context.tr('user_banned') : context.tr('failed')),
               backgroundColor: ok ? Colors.orange : Colors.red,
             ),
           );
@@ -147,18 +150,17 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete User?'),
-        content: Text(
-            'Permanently delete ${user.name}? This cannot be undone.'),
+        title: Text(context.tr('delete_user_title')),
+        content: Text('${context.tr('delete_confirm')} ${user.name}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(context.tr('delete')),
           ),
         ],
       ),
@@ -169,7 +171,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ok ? '🗑️ User deleted' : '❌ Failed'),
+            content: Text(ok ? context.tr('user_deleted') : context.tr('failed')),
             backgroundColor: ok ? Colors.green : Colors.red,
           ),
         );
@@ -184,9 +186,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('👥 Users Management'),
+        title: Text(context.tr('users_management')),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -201,7 +203,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             color: AppColors.primary,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TextField(
@@ -209,6 +211,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 onChanged: (v) =>
                     setState(() => _searchQuery = v.toLowerCase()),
                 decoration: InputDecoration(
+                  hintStyle: TextStyle(color: context.textSecondary),
                   hintText: 'Search users by name, email, phone...',
                   prefixIcon: const Icon(Icons.search),
                   border: InputBorder.none,
@@ -259,12 +262,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           child: Text(
                             role == 'all'
                                 ? '👥 All Roles'
-                                : role.toUpperCase(),
+                                : context.tr(role).toUpperCase(),
                             style: TextStyle(
                               color: isSelected
                                   ? Colors.black
                                   : Colors.white70,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               fontSize: width * 0.024,
                             ),
                           ),
@@ -291,8 +294,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                               vertical: height * 0.006),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? Colors.white
-                                : Colors.white.withOpacity(0.1),
+                                ? context.cardBg
+                                : context.cardBg.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: Text(
@@ -303,7 +306,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                               color: isSelected
                                   ? AppColors.primary
                                   : Colors.white70,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               fontSize: width * 0.024,
                             ),
                           ),
@@ -367,18 +370,18 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         children: [
           Row(
             children: [
-              _bigStat(
-                  '👥', '${_stats['total'] ?? 0}', 'Total Users', width),
-              _bigStat('👤', '${_stats['customers'] ?? 0}', 'Customers',
+              _bigStat('👥', '${_stats['total'] ?? 0}', context.tr('total_users'),
                   width),
-              _bigStat('👑', '${_stats['admins'] ?? 0}', 'Admins', width),
+              _bigStat('👤', '${_stats['customers'] ?? 0}', context.tr('customers'),
+                  width),
+              _bigStat('👑', '${_stats['admins'] ?? 0}', context.tr('admins'), width),
             ],
           ),
           SizedBox(height: height * 0.01),
           Row(
             children: [
-              _bigStat('✅', '${_stats['active'] ?? 0}', 'Active', width),
-              _bigStat('🚫', '${_stats['banned'] ?? 0}', 'Banned', width),
+              _bigStat('✅', '${_stats['active'] ?? 0}', context.tr('active'), width),
+              _bigStat('🚫', '${_stats['banned'] ?? 0}', context.tr('banned'), width),
               _bigStat('🆕', '${_stats['newThisMonth'] ?? 0}', 'New', width),
             ],
           ),
@@ -429,13 +432,13 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.people_outline,
-              size: width * 0.2, color: Colors.grey.shade300),
+              size: width * 0.2, color: context.textSecondary.withOpacity(0.3)),
           SizedBox(height: height * 0.02),
           Text(
-            'No users found',
+            context.tr('no_users_found'),
             style: TextStyle(
               fontSize: width * 0.05,
-              color: Colors.grey.shade600,
+              color: context.textSecondary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -449,9 +452,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
     return Container(
       padding: EdgeInsets.all(width * 0.05),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -461,22 +464,22 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: context.textSecondary.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
           SizedBox(height: width * 0.05),
           Text(
-            'Change Role for ${user.name}',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            '${context.tr('change_role_for')} ${user.name}',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: context.textPrimary),
           ),
           SizedBox(height: width * 0.03),
-          _roleOption('customer', '👤', 'Customer', 'Regular app user',
+          _roleOption('customer', '👤', context.tr('customer'), context.tr('regular_user_desc'),
               Colors.blue, user.role, width),
-          _roleOption('admin', '🛡️', 'Admin', 'Can manage content',
+          _roleOption('admin', '🛡️', context.tr('admin'), context.tr('admin_desc'),
               AppColors.accentGold, user.role, width),
-          _roleOption('superAdmin', '👑', 'Super Admin', 'Full access',
+          _roleOption('superAdmin', '👑', context.tr('superAdmin'), context.tr('super_admin_desc'),
               Colors.red, user.role, width),
           SizedBox(height: width * 0.03),
         ],
@@ -493,10 +496,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         margin: EdgeInsets.only(bottom: width * 0.02),
         padding: EdgeInsets.all(width * 0.04),
         decoration: BoxDecoration(
-          color: isCurrent ? color.withOpacity(0.1) : Colors.grey.shade50,
+          color: isCurrent ? color.withOpacity(0.1) : context.pageBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isCurrent ? color : Colors.grey.shade200,
+            color: isCurrent ? color : context.textSecondary.withOpacity(0.1),
             width: 2,
           ),
         ),
@@ -509,11 +512,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16)),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16, color: context.textPrimary)),
                   Text(desc,
                       style: TextStyle(
-                          color: Colors.grey.shade600, fontSize: 12)),
+                          color: context.textSecondary, fontSize: 12)),
                 ],
               ),
             ),

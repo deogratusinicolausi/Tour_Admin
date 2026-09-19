@@ -3,6 +3,10 @@ import '../models/chat_model.dart';
 import '../services/chat_service.dart';
 import '../utils/colors.dart';
 import 'admin_chat_detail_screen.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+import '../providers/app_theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class AdminChatsListScreen extends StatefulWidget {
   const AdminChatsListScreen({super.key});
@@ -23,9 +27,9 @@ class _AdminChatsListScreenState extends State<AdminChatsListScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: const Text('💬 Chats'),
+        title: Text('💬 ${context.tr('chats')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -39,14 +43,14 @@ class _AdminChatsListScreenState extends State<AdminChatsListScreen> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
                     onChanged: (v) =>
                         setState(() => _searchQuery = v.toLowerCase()),
                     decoration: InputDecoration(
-                      hintText: 'Search chats...',
+                      hintText: context.tr('search_chats'),
                       prefixIcon: const Icon(Icons.search),
                       border: InputBorder.none,
                       contentPadding:
@@ -57,9 +61,9 @@ class _AdminChatsListScreenState extends State<AdminChatsListScreen> {
                 SizedBox(height: height * 0.015),
                 Row(
                   children: [
-                    _filterChip('all', '🔔 All'),
-                    _filterChip('unread', '🔵 Unread'),
-                    _filterChip('recent', '🕐 Recent'),
+                    _filterChip('all', '🔔 ${context.tr('all')}'),
+                    _filterChip('unread', '🔵 ${context.tr('unread')}'),
+                    _filterChip('recent', '🕐 ${context.tr('recent')}'),
                   ],
                 ),
               ],
@@ -151,11 +155,11 @@ class _AdminChatsListScreenState extends State<AdminChatsListScreen> {
               size: width * 0.2, color: Colors.grey.shade300),
           SizedBox(height: height * 0.02),
           Text(
-            'No chats yet',
+            context.tr('no_chats_yet'),
             style: TextStyle(
               fontSize: width * 0.05,
               fontWeight: FontWeight.bold,
-              color: Colors.grey.shade600,
+              color: context.textSecondary,
             ),
           ),
         ],
@@ -184,7 +188,7 @@ class _AdminChatsListScreenState extends State<AdminChatsListScreen> {
         margin: EdgeInsets.only(bottom: height * 0.012),
         padding: EdgeInsets.all(width * 0.04),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(16),
           border: hasUnread
               ? Border.all(
@@ -232,7 +236,7 @@ class _AdminChatsListScreenState extends State<AdminChatsListScreen> {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: width * 0.04,
-                            color: Colors.grey.shade900,
+                            color: context.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -260,7 +264,7 @@ class _AdminChatsListScreenState extends State<AdminChatsListScreen> {
                           chat.lastMessage,
                           style: TextStyle(
                             color: hasUnread
-                                ? Colors.grey.shade800
+                                ? context.textPrimary
                                 : Colors.grey.shade500,
                             fontSize: width * 0.032,
                             fontWeight: hasUnread

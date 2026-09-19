@@ -7,6 +7,9 @@ import '../models/culture_model.dart';
 import '../services/firestore_service.dart';
 import '../services/cloudinary_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
+import '../utils/translate_helper.dart';
+
 
 class AddEditCultureScreen extends StatefulWidget {
   final CultureModel? culture;
@@ -240,9 +243,9 @@ class _AddEditCultureScreenState extends State<AddEditCultureScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: Text(isEditing ? '✏️ Edit Culture' : '➕ Add Culture'),
+        title: Text(isEditing ? context.tr('edit_culture') : context.tr('add_culture')),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -263,7 +266,7 @@ class _AddEditCultureScreenState extends State<AddEditCultureScreen> {
                   height: height * 0.25,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _imageUrl.isEmpty
@@ -290,7 +293,7 @@ class _AddEditCultureScreenState extends State<AddEditCultureScreen> {
                       SizedBox(height: height * 0.01),
                       Text('Tap to upload',
                           style: TextStyle(
-                              color: Colors.grey.shade600)),
+                              color: context.textSecondary)),
                     ],
                   )
                       : null,
@@ -316,7 +319,7 @@ class _AddEditCultureScreenState extends State<AddEditCultureScreen> {
                           width: height * 0.12,
                           margin: EdgeInsets.only(right: width * 0.02),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.cardBg,
                             borderRadius: BorderRadius.circular(12),
                             border:
                             Border.all(color: Colors.grey.shade300),
@@ -381,7 +384,7 @@ class _AddEditCultureScreenState extends State<AddEditCultureScreen> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppColors.primary
-                            : Colors.white,
+                            : context.cardBg,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
@@ -531,7 +534,7 @@ class _AddEditCultureScreenState extends State<AddEditCultureScreen> {
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -558,11 +561,11 @@ class _AddEditCultureScreenState extends State<AddEditCultureScreen> {
               SizedBox(height: height * 0.01),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SwitchListTile(
-                  title: const Text('⭐ Featured',
+                  title: Text(context.tr('featured'),
                       style: TextStyle(fontWeight: FontWeight.bold)),
                   value: _featured,
                   activeColor: AppColors.accentGold,
@@ -573,7 +576,7 @@ class _AddEditCultureScreenState extends State<AddEditCultureScreen> {
               Container(
                 padding: EdgeInsets.all(width * 0.04),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -627,7 +630,7 @@ class _AddEditCultureScreenState extends State<AddEditCultureScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                    isEditing ? 'UPDATE CULTURE' : 'ADD CULTURE',
+                    isEditing ? context.tr('update_culture') : context.tr('add_culture'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -650,7 +653,7 @@ class _AddEditCultureScreenState extends State<AddEditCultureScreen> {
       style: TextStyle(
         fontSize: width * 0.04,
         fontWeight: FontWeight.bold,
-        color: Colors.grey.shade800,
+        color: context.textPrimary,
       ),
     );
   }
@@ -674,7 +677,7 @@ class _AddEditCultureScreenState extends State<AddEditCultureScreen> {
         hintText: hint,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.cardBg,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -713,7 +716,7 @@ class _AddEditCultureScreenState extends State<AddEditCultureScreen> {
                   hintText: hint,
                   prefixIcon: Icon(icon, color: color),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.cardBg,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -738,7 +741,7 @@ class _AddEditCultureScreenState extends State<AddEditCultureScreen> {
               padding: EdgeInsets.symmetric(
                   horizontal: width * 0.03, vertical: height * 0.008),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
