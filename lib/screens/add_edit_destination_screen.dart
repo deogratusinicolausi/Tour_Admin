@@ -38,6 +38,9 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
   // State
   String _imageUrl = '';
   List<String> _gallery = [];
+  String _videoUrl = '';
+  List<String> _videos = [];
+  bool _isUploadingVideo = false;
   bool _featured = false;
   String _status = 'active';
   bool _isLoading = false;
@@ -66,6 +69,8 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
     _gallery = List.from(dest.gallery);
     _featured = dest.featured;
     _status = dest.status;
+    _videoUrl = dest.videoUrl;
+    _videos = List.from(dest.videos);
   }
 
   Future<void> _pickAndUploadImage({bool isMain = true}) async {
@@ -129,6 +134,47 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
       );
     }
   }
+  Future<void> _pickAndUploadVideo({bool isMain = true}) async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickVideo(
+        source: ImageSource.gallery,
+        maxDuration: const Duration(minutes: 2),
+      );
+      if (pickedFile == null) return;
+      setState(() => _isUploadingVideo = true);
+
+      String? url;
+      if (kIsWeb) {
+        Uint8List bytes = await pickedFile.readAsBytes();
+        url = await _cloudinaryService.uploadVideoBytes(bytes, folder: 'turiva/destinations/videos');
+      } else {
+        url = await _cloudinaryService.uploadVideo(File(pickedFile.path), folder: 'turiva/destinations/videos');
+      }
+
+      if (url != null) {
+        setState(() {
+          if (isMain) {
+            _videoUrl = url!;
+          } else {
+            _videos.add(url!);
+          }
+          _isUploadingVideo = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Video uploaded!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        setState(() => _isUploadingVideo = false);
+      }
+    } catch (e) {
+      setState(() => _isUploadingVideo = false);
+    }
+  }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
@@ -158,6 +204,8 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
       gallery: _gallery,
       featured: _featured,
       status: _status,
+      videoUrl: _videoUrl,
+      videos: _videos,
       createdAt: widget.destination?.createdAt ?? DateTime.now(),
     );
 
@@ -355,6 +403,64 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
                       ],
                     );
                   },
+                ),
+              ),
+              SizedBox(height: height * 0.025),
+
+              // 🎬 VIDEO SECTION
+              _buildSectionTitle('🎬 Video (Optional)', width, context),
+              SizedBox(height: height * 0.01),
+
+              GestureDetector(
+                onTap: _isUploadingVideo ? null : () => _pickAndUploadVideo(isMain: true),
+                child: Container(
+                  height: height * 0.2,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: context.cardBg,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _videoUrl.isEmpty ? Colors.grey.shade300 : AppColors.primary,
+                      width: 2,
+                    ),
+                  ),
+                  child: _isUploadingVideo
+                      ? const Center(child: CircularProgressIndicator())
+                      : _videoUrl.isEmpty
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.video_call,
+                                    size: width * 0.15, color: Colors.grey.shade400),
+                                SizedBox(height: height * 0.01),
+                                Text('Tap to upload video',
+                                    style: TextStyle(color: context.textSecondary)),
+                              ],
+                            )
+                          : Stack(
+                              children: [
+                                Center(
+                                  child: Icon(Icons.play_circle_fill,
+                                      size: width * 0.2, color: AppColors.primary),
+                                ),
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: GestureDetector(
+                                    onTap: () => setState(() => _videoUrl = ''),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.close,
+                                          color: Colors.white, size: 16),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                 ),
               ),
               SizedBox(height: height * 0.025),

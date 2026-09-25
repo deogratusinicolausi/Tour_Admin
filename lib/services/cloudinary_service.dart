@@ -49,20 +49,6 @@ class CloudinaryService {
     }
   }
 
-  // ⭐️ Upload multiple images
-  Future<List<String>> uploadMultipleImages(
-      List<File> files, {
-        String folder = 'turiva',
-      }) async {
-    List<String> urls = [];
-    for (File file in files) {
-      String? url = await uploadImage(file, folder: folder);
-      if (url != null) urls.add(url);
-    }
-    return urls;
-  }
-
-  // ⭐️ Upload video (kama unataka baadaye)
   Future<String?> uploadVideo(File file, {String folder = 'turiva/videos'}) async {
     try {
       CloudinaryResponse response = await _cloudinary.uploadFile(
@@ -78,6 +64,53 @@ class CloudinaryService {
       return null;
     }
   }
+
+  Future<String?> uploadVideoBytes(Uint8List bytes, {String folder = 'turiva/videos'}) async {
+    try {
+      CloudinaryResponse response = await _cloudinary.uploadFile(
+        CloudinaryFile.fromBytesData(
+          bytes,
+          identifier: 'video_${DateTime.now().millisecondsSinceEpoch}',
+          resourceType: CloudinaryResourceType.Video,
+          folder: folder,
+        ),
+      );
+      return response.secureUrl;
+    } catch (e) {
+      print('🔥 Cloudinary video upload error: $e');
+      return null;
+    }
+  }
+
+  // ⭐️ Upload multiple images
+  Future<List<String>> uploadMultipleImages(
+      List<File> files, {
+        String folder = 'turiva',
+      }) async {
+    List<String> urls = [];
+    for (File file in files) {
+      String? url = await uploadImage(file, folder: folder);
+      if (url != null) urls.add(url);
+    }
+    return urls;
+  }
+
+  // ⭐️ Upload video (kama unataka baadaye)
+  // Future<String?> uploadVideo(File file, {String folder = 'turiva/videos'}) async {
+  //   try {
+  //     CloudinaryResponse response = await _cloudinary.uploadFile(
+  //       CloudinaryFile.fromFile(
+  //         file.path,
+  //         resourceType: CloudinaryResourceType.Video,
+  //         folder: folder,
+  //       ),
+  //     );
+  //     return response.secureUrl;
+  //   } catch (e) {
+  //     print('🔥 Cloudinary video upload error: $e');
+  //     return null;
+  //   }
+  // }
 
 // ⭐️ Delete image (optional — inahitaji API secret, sio salama kwenye client)
 // Kwa hiyo tutatumia Cloud Functions baadaye

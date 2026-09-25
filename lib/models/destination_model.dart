@@ -11,6 +11,8 @@ class DestinationModel {
   final double longitude;
   final String imageUrl;
   final List<String> gallery;
+  final List<String> videos;        // ⭐ ONGEZA HII
+  final String videoUrl;
   final double rating;
   final bool featured;
   final String status; // active, inactive
@@ -28,6 +30,8 @@ class DestinationModel {
     this.longitude = 0.0,
     this.imageUrl = '',
     this.gallery = const [],
+    this.videos = const [],           // ⭐ ONGEZA
+    this.videoUrl = '',
     this.rating = 0.0,
     this.featured = false,
     this.status = 'active',
@@ -48,6 +52,8 @@ class DestinationModel {
       longitude: (map['longitude'] ?? 0.0).toDouble(),
       imageUrl: map['imageUrl'] ?? '',
       gallery: List<String>.from(map['gallery'] ?? []),
+        videos: List<String>.from(map['videos'] ?? []),        // ⭐ ONGEZA
+        videoUrl: map['videoUrl'] ?? '',
       rating: (map['rating'] ?? 0.0).toDouble(),
       featured: map['featured'] ?? false,
       status: map['status'] ?? 'active',
@@ -68,6 +74,8 @@ class DestinationModel {
       'longitude': longitude,
       'imageUrl': imageUrl,
       'gallery': gallery,
+      'videos': videos,                  // ⭐ ONGEZA
+      'videoUrl': videoUrl,
       'rating': rating,
       'featured': featured,
       'status': status,
