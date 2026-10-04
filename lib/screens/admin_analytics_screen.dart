@@ -66,7 +66,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       backgroundColor: context.pageBg,
       appBar: AppBar(
         title: Text('📊 ${context.tr('analytics')}'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: context.isDark ? const Color(0xFF1A237E) : AppColors.primary,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -127,12 +127,17 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               height: height * 0.28,
               padding: EdgeInsets.all(width * 0.04),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: context.borderColor,
+                  width: 1,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.05),
                     blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -147,12 +152,17 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               height: height * 0.3,
               padding: EdgeInsets.all(width * 0.04),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: context.borderColor,
+                  width: 1,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.05),
                     blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -167,12 +177,17 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               height: height * 0.25,
               padding: EdgeInsets.all(width * 0.04),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: context.borderColor,
+                  width: 1,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.05),
                     blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -188,12 +203,17 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                 margin: EdgeInsets.only(bottom: height * 0.01),
                 padding: EdgeInsets.all(width * 0.035),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.borderColor,
+                    width: 1,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.03),
                       blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -216,9 +236,10 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                         children: [
                           Text(
                             item['name'] ?? '',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
+                              color: context.textPrimary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -226,7 +247,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                           Text(
                             '${item['count']} bookings',
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: context.textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -236,7 +257,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                     Text(
                       '\$${(item['revenue'] as num).toStringAsFixed(0)}',
                       style: TextStyle(
-                        color: AppColors.primary,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.bold,
                         fontSize: width * 0.04,
                       ),
@@ -259,7 +280,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       style: TextStyle(
         fontSize: width * 0.045,
         fontWeight: FontWeight.bold,
-        color: Colors.grey.shade800,
+        color: context.textPrimary,
       ),
     );
   }
@@ -271,12 +292,17 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
         margin: EdgeInsets.symmetric(horizontal: width * 0.005),
         padding: EdgeInsets.all(width * 0.04),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          color: context.cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: context.borderColor,
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
+              color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -296,7 +322,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               label,
               style: TextStyle(
                 fontSize: width * 0.026,
-                color: Colors.grey.shade600,
+                color: context.textSecondary,
               ),
             ),
           ],

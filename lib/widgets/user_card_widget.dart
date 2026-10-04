@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user_model2.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
 
 class UserCard extends StatelessWidget {
   final UserModel user;
@@ -40,14 +41,14 @@ class UserCard extends StatelessWidget {
       child: Container(
         margin: EdgeInsets.only(bottom: height * 0.015),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(16),
           border: isBanned
               ? Border.all(color: Colors.red.withOpacity(0.3), width: 2)
-              : null,
+              : Border.all(color: context.borderColor, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.05),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -59,7 +60,7 @@ class UserCard extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(width * 0.04),
               decoration: BoxDecoration(
-                color: _roleColor.withOpacity(0.08),
+                color: _roleColor.withOpacity(context.isDark ? 0.15 : 0.08),
                 borderRadius:
                 const BorderRadius.vertical(top: Radius.circular(16)),
               ),

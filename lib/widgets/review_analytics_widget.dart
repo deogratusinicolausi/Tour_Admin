@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';   // ⬅️ ONGEZA
 
 class ReviewAnalyticsWidget extends StatelessWidget {
   final Map<String, dynamic> stats;
@@ -14,11 +15,15 @@ class ReviewAnalyticsWidget extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(width * 0.04),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: context.borderColor,
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.05),
             blurRadius: 10,
           ),
         ],
@@ -31,17 +36,17 @@ class ReviewAnalyticsWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: width * 0.04,
               fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
+              color: context.textPrimary,
             ),
           ),
           SizedBox(height: height * 0.02),
-          ..._buildRatingBars(width),
+          ..._buildRatingBars(width, context),
         ],
       ),
     );
   }
 
-  List<Widget> _buildRatingBars(double width) {
+  List<Widget> _buildRatingBars(double width, BuildContext context) {
     return [5, 4, 3, 2, 1].map((star) {
       final count = (stats['$star'] ?? 0) as num;
       final total = (stats['total'] ?? 1) as num;
@@ -60,6 +65,7 @@ class ReviewAnalyticsWidget extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: width * 0.035,
+                      color: context.textPrimary,
                     ),
                   ),
                   Icon(
@@ -75,7 +81,7 @@ class ReviewAnalyticsWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: percent,
-                  backgroundColor: Colors.grey.shade200,
+                  backgroundColor: context.chipBg,
                   color: AppColors.accentGold,
                   minHeight: 8,
                 ),
@@ -90,7 +96,7 @@ class ReviewAnalyticsWidget extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: width * 0.03,
-                  color: Colors.grey.shade700,
+                  color: context.textSecondary,
                 ),
               ),
             ),

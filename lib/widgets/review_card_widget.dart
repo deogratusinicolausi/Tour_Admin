@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/review_model.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';   // ⬅️ ONGEZA
 
 // ⭐️ Star Rating Widget
 class StarRating extends StatelessWidget {
@@ -58,14 +59,14 @@ class ReviewCard extends StatelessWidget {
       child: Container(
         margin: EdgeInsets.only(bottom: height * 0.015),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,   // ⬅️ THEME-AWARE
           borderRadius: BorderRadius.circular(16),
           border: review.featured
               ? Border.all(color: AppColors.accentGold, width: 2)
-              : null,
+              : Border.all(color: context.borderColor, width: 1),   // ⬅️ ONGEZA border
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.05),   // ⬅️
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -79,8 +80,8 @@ class ReviewCard extends StatelessWidget {
                   horizontal: width * 0.04, vertical: height * 0.012),
               decoration: BoxDecoration(
                 color: review.featured
-                    ? AppColors.accentGold.withOpacity(0.15)
-                    : AppColors.primary.withOpacity(0.05),
+                    ? AppColors.accentGold.withOpacity(context.isDark ? 0.25 : 0.15)   // ⬅️
+                    : AppColors.primary.withOpacity(context.isDark ? 0.2 : 0.05),   // ⬅️
                 borderRadius:
                 const BorderRadius.vertical(top: Radius.circular(16)),
               ),
@@ -121,7 +122,7 @@ class ReviewCard extends StatelessWidget {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: width * 0.035,
-                                  color: Colors.grey.shade900,
+                                  color: context.textPrimary,   // ⬅️
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -192,7 +193,7 @@ class ReviewCard extends StatelessWidget {
                             Text(
                               review.timeAgo,
                               style: TextStyle(
-                                color: Colors.grey.shade500,
+                                color: context.textMuted,   // ⬅️
                                 fontSize: width * 0.024,
                               ),
                             ),
@@ -237,7 +238,7 @@ class ReviewCard extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: width * 0.04,
-                        color: Colors.grey.shade900,
+                        color: context.textPrimary,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -250,7 +251,7 @@ class ReviewCard extends StatelessWidget {
                     review.comment,
                     style: TextStyle(
                       fontSize: width * 0.033,
-                      color: Colors.grey.shade700,
+                      color: context.textSecondary,
                       height: 1.5,
                     ),
                     maxLines: 3,
@@ -278,9 +279,8 @@ class ReviewCard extends StatelessWidget {
                                 errorBuilder: (_, __, ___) => Container(
                                   width: height * 0.08,
                                   height: height * 0.08,
-                                  color: Colors.grey.shade200,
-                                  child:
-                                  const Icon(Icons.broken_image),
+                                  color: context.chipBg,
+                                  child: Icon(Icons.broken_image, color: context.textMuted),
                                 ),
                               ),
                             ),
@@ -296,10 +296,10 @@ class ReviewCard extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.all(width * 0.035),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.05),
+                        color: AppColors.primary.withOpacity(context.isDark ? 0.15 : 0.05),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                            color: AppColors.primary.withOpacity(0.15)),
+                            color: AppColors.primary.withOpacity(context.isDark ? 0.3 : 0.15)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,7 +325,7 @@ class ReviewCard extends StatelessWidget {
                             review.adminReply,
                             style: TextStyle(
                               fontSize: width * 0.03,
-                              color: Colors.grey.shade700,
+                              color: context.textSecondary,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,

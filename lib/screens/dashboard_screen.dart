@@ -28,14 +28,12 @@ import 'admin_payments_screen.dart';
 import 'admin_analytics_screen.dart';
 import 'admin_coupons_screen.dart';
 import 'admin_cancellations_screen.dart';
-import '../services/payment_service.dart';
-import 'admin_reviews_screen.dart';
-import '../services/review_service.dart';
 import '../utils/theme_helper.dart';
 import '../utils/translate_helper.dart';
 import '../providers/app_theme_provider.dart';
-import 'admin_turiva_chats_screen.dart';
 import '../services/turiva_chat_service.dart';
+import 'wishlist_insights_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -55,6 +53,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _pendingBookings = 0;
   int _confirmedBookings = 0;
   List<Map<String, dynamic>> _recentBookings = [];
+
+  // ⭐ Real counts for cards
+  int _paymentsCount = 0;
+  int _couponsCount = 0;
+  int _cancellationsCount = 0;
+  int _wishlistInsightsCount = 0;
   bool _isLoading = true;
   String _userName = 'Admin';
 
@@ -70,21 +74,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    if (mounted) setState(() => _isLoading = true);
 
-    final stats = await _dashboardService.getAllStats();
-    final pending = await _dashboardService.getPendingBookings();
-    final confirmed = await _dashboardService.getConfirmedBookings();
-    final recent = await _dashboardService.getRecentBookings();
-    final bookingsData = await _dashboardService.getBookingsLast7Days();
-    final revenueData = await _dashboardService.getRevenueByMonth();
-    final itemTypes = await _dashboardService.getItemTypeDistribution();
+    // Safe wrapper — never throws
+    Future<T> safe<T>(Future<T> future, T fallback) async {
+      try {
+        return await future;
+      } catch (e) {
+        debugPrint('🔥 Query failed: $e');
+        return fallback;
+      }
+    }
 
-    // Get user name
+    final results = await Future.wait([
+      safe(_dashboardService.getAllStats(), <String, int>{}),
+      safe(_dashboardService.getPendingBookings(), 0),
+      safe(_dashboardService.getConfirmedBookings(), 0),
+      safe(_dashboardService.getRecentBookings(), <Map<String, dynamic>>[]),
+      safe(_dashboardService.getBookingsLast7Days(), <Map<String, dynamic>>[]),
+      safe(_dashboardService.getRevenueByMonth(), <Map<String, dynamic>>[]),
+      safe(_dashboardService.getItemTypeDistribution(), <String, int>{}),
+    ]);
+
+    final stats = results[0] as Map<String, int>;
+    final pending = results[1] as int;
+    final confirmed = results[2] as int;
+    final recent = (results[3] as List).cast<Map<String, dynamic>>();
+    final bookingsData = (results[4] as List).cast<Map<String, dynamic>>();
+    final revenueData = (results[5] as List).cast<Map<String, dynamic>>();
+    final itemTypes = results[6] as Map<String, int>;
+
     final user = _auth.getCurrentUser();
     String name = 'Admin';
     if (user != null) {
-      // Try to get from Firestore users collection
       name = user.displayName ?? user.email?.split('@')[0] ?? 'Admin';
     }
 
@@ -100,6 +122,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _userName = name;
         _isLoading = false;
       });
+      _loadCardCounts(); // still loads the extra card counts
+    }
+  }
+
+  // ⭐ Load counts for the extra cards
+  Future<void> _loadCardCounts() async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+
+      // Payments — count all docs
+      final paymentsSnap = await firestore.collection('payments').get();
+
+      // Coupons — all active
+      final couponsSnap = await firestore
+          .collection('coupons')
+          .where('isActive', isEqualTo: true)
+          .get();
+
+      // Cancellations — bookings with status cancelled
+      final cancellationsSnap = await firestore
+          .collection('bookings')
+          .where('bookingStatus', isEqualTo: 'cancelled')
+          .get();
+
+      // Wishlist insights — count wishlist items
+      final wishlistsSnap = await firestore.collection('wishlists').get();
+
+      if (mounted) {
+        setState(() {
+          _paymentsCount = paymentsSnap.docs.length;
+          _couponsCount = couponsSnap.docs.length;
+          _cancellationsCount = cancellationsSnap.docs.length;
+          _wishlistInsightsCount = wishlistsSnap.docs.length;
+        });
+      }
+    } catch (e) {
+      debugPrint('🔥 loadCardCounts: $e');
     }
   }
 
@@ -141,6 +200,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ===== ERROR BANNER =====
+                      if (_stats.isEmpty && !_isLoading)
+                        Container(
+                          margin: EdgeInsets.only(bottom: height * 0.02),
+                          padding: EdgeInsets.all(width * 0.03),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.red.withOpacity(0.4)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.warning_amber, color: Colors.red),
+                              SizedBox(width: width * 0.02),
+                              const Expanded(
+                                child: Text(
+                                  'Some data failed to load. Pull down to retry.',
+                                  style: TextStyle(color: Colors.red, fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       // ===== HEADER =====
                       _buildHeader(width, height),
                       SizedBox(height: height * 0.025),
@@ -354,7 +436,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildHeader(double width, double height) {
     return Container(
-      padding: EdgeInsets.all(width * 0.05),
+      padding: EdgeInsets.all(width * 0.04),
       decoration: BoxDecoration(
         gradient: AppColors.mainGradient,
         borderRadius: BorderRadius.circular(20),
@@ -366,186 +448,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${context.tr('welcome_back')},',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: width * 0.035,
-                  ),
-                ),
-                SizedBox(height: height * 0.005),
-                Text(
-                  '$_userName 👋',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: width * 0.06,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: height * 0.01),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: width * 0.03,
-                    vertical: height * 0.005,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.accentGold.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '⚡ SUPER ADMIN',
-                    style: TextStyle(
-                      color: AppColors.accentGold,
-                      fontSize: width * 0.028,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // ===== ROW 1: AVATAR + WELCOME + NOTIFICATIONS =====
           Row(
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              StreamBuilder<int>(
-                stream: AdminNotificationService().getUnreadCount(),
-                builder: (context, snapshot) {
-                  final unread = snapshot.data ?? 0;
-                  return Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.notifications_outlined,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const AdminNotificationsScreen(),
-                            ),
-                          ).then((_) => _loadData());
-                        },
-                      ),
-                      if (unread > 0)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              unread > 99 ? '99+' : '$unread',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-              StreamBuilder<int>(
-                stream: ChatService().getTotalUnread(),
-                builder: (context, snapshot) {
-                  final unread = snapshot.data ?? 0;
-                  return Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const AdminChatsListScreen(),
-                            ),
-                          ).then((_) => _loadData());
-                        },
-                      ),
-                      if (unread > 0)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              unread > 99 ? '99+' : '$unread',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-              StreamBuilder<int>(
-                stream: TurivaChatService().getTotalUnreadByAdmin(),
-                builder: (context, snapshot) {
-                  final unread = snapshot.data ?? 0;
-                  return Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.forum_outlined, color: Colors.white),
-                        onPressed: (){},
-                        // onPressed: () {
-                        //   Navigator.push(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //       builder: (_) => const AdminTurivaChatsScreen(),
-                        //     ),
-                        //   ).then((_) => _loadData());
-                        // },
-                      ),
-                      if (unread > 0)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              unread > 99 ? '99+' : '$unread',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
-          SizedBox(width: width * 0.02),
-          Column(
-            children: [
-              // ⭐ ADMIN PROFILE - CLICKABLE
+              // Avatar
               GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -556,43 +466,225 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ).then((_) => _loadData());
                 },
                 child: Container(
-                  padding: EdgeInsets.all(width * 0.02),
+                  padding: EdgeInsets.all(width * 0.025),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.4),
+                      width: 2,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.admin_panel_settings,
+                    color: Colors.white,
+                    size: width * 0.08,
+                  ),
+                ),
+              ),
+              SizedBox(width: width * 0.03),
+
+              // Welcome text — full width, no wrapping
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${context.tr('welcome_back')},',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.85),
+                        fontSize: width * 0.032,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: height * 0.003),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            '$_userName',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: width * 0.052,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        SizedBox(width: width * 0.02),
+                        Text(
+                          '👋',
+                          style: TextStyle(fontSize: width * 0.045),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Notification icons row
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Bell
+                  StreamBuilder<int>(
+                    stream: AdminNotificationService().getUnreadCount(),
+                    builder: (context, snapshot) {
+                      final unread = snapshot.data ?? 0;
+                      return _headerIconBtn(
+                        icon: Icons.notifications_outlined,
+                        badge: unread,
+                        width: width,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AdminNotificationsScreen(),
+                            ),
+                          ).then((_) => _loadData());
+                        },
+                      );
+                    },
+                  ),
+                  SizedBox(width: width * 0.01),
+                  // Chat
+                  StreamBuilder<int>(
+                    stream: ChatService().getTotalUnread(),
+                    builder: (context, snapshot) {
+                      final unread = snapshot.data ?? 0;
+                      return _headerIconBtn(
+                        icon: Icons.chat_bubble_outline,
+                        badge: unread,
+                        width: width,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AdminChatsListScreen(),
+                            ),
+                          ).then((_) => _loadData());
+                        },
+                      );
+                    },
+                  ),
+                  SizedBox(width: width * 0.01),
+                  // Turiva Chat
+                  StreamBuilder<int>(
+                    stream: TurivaChatService().getTotalUnreadByAdmin(),
+                    builder: (context, snapshot) {
+                      final unread = snapshot.data ?? 0;
+                      return _headerIconBtn(
+                        icon: Icons.forum_outlined,
+                        badge: unread,
+                        width: width,
+                        onTap: () {},
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          SizedBox(height: height * 0.02),
+
+          // ===== ROW 2: SUPER ADMIN + REFRESH + LOGOUT =====
+          Row(
+            children: [
+              // SUPER ADMIN badge
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: width * 0.03,
+                  vertical: height * 0.006,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.accentGold.withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.accentGold.withOpacity(0.5),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.bolt,
+                      color: AppColors.accentGold,
+                      size: width * 0.035,
+                    ),
+                    SizedBox(width: width * 0.01),
+                    Text(
+                      'SUPER ADMIN',
+                      style: TextStyle(
+                        color: AppColors.accentGold,
+                        fontSize: width * 0.028,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Spacer(),
+
+              // Refresh button
+              GestureDetector(
+                onTap: () {
+                  _loadData();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('🔄 Refreshed'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: EdgeInsets.all(width * 0.025),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.admin_panel_settings,
+                    Icons.refresh,
                     color: Colors.white,
-                    size: width * 0.1,
+                    size: width * 0.045,
                   ),
                 ),
               ),
-              SizedBox(height: height * 0.01),
+
+              SizedBox(width: width * 0.02),
+
+              // Logout button
               GestureDetector(
                 onTap: _logout,
                 child: Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: width * 0.03,
-                    vertical: height * 0.005,
+                    vertical: height * 0.008,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.red.shade700,
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.logout,
                         color: Colors.white,
-                        size: width * 0.03,
+                        size: width * 0.035,
                       ),
-                      SizedBox(width: width * 0.01),
+                      SizedBox(width: width * 0.012),
                       Text(
                         'Logout',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: width * 0.025,
+                          fontSize: width * 0.03,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -607,6 +699,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // ============================================================
+  // HELPER — Notification icon button with badge
+  // ============================================================
+  Widget _headerIconBtn({
+    required IconData icon,
+    required int badge,
+    required double width,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: EdgeInsets.all(width * 0.022),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: width * 0.048,
+            ),
+          ),
+          if (badge > 0)
+            Positioned(
+              top: -2,
+              right: -2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 5,
+                  vertical: 2,
+                ),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  badge > 99 ? '99+' : '$badge',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   // ===== SECTION TITLE =====
 
   Widget _buildSectionTitle(String title, double width) {
@@ -615,7 +761,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       style: TextStyle(
         fontSize: width * 0.045,
         fontWeight: FontWeight.bold,
-        color: context.isDark ? Colors.white : Colors.grey.shade800,
+        color: context.textPrimary,
       ),
     );
   }
@@ -625,37 +771,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final stats = [
       {
         'icon': '👥',
-        'label': 'Users',
+        'label': context.tr('users'),
         'value': _stats['users'] ?? 0,
         'color': const Color(0xFF667eea),
       },
       {
         'icon': '📅',
-        'label': 'Bookings',
+        'label': context.tr('bookings'),
         'value': _stats['bookings'] ?? 0,
         'color': const Color(0xFFf093fb),
       },
       {
         'icon': '📍',
-        'label': 'Destinations',
+        'label': context.tr('destinations'),
         'value': _stats['destinations'] ?? 0,
         'color': const Color(0xFF4facfe),
       },
       {
         'icon': '🏨',
-        'label': 'Hotels',
+        'label': context.tr('hotels'),
         'value': _stats['hotels'] ?? 0,
         'color': const Color(0xFF43e97b),
       },
       {
         'icon': '🦁',
-        'label': 'Tours',
+        'label': context.tr('tours'),
         'value': _stats['tours'] ?? 0,
         'color': const Color(0xFFfa709a),
       },
       {
         'icon': '🎁',
-        'label': 'Deals',
+        'label': context.tr('deals'),
         'value': _stats['deals'] ?? 0,
         'color': const Color(0xFFff9a9e),
       },
@@ -727,7 +873,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Expanded(
           child: _buildStatusCard(
             icon: '⏳',
-            label: 'Pending',
+            label: context.tr('pending'),
             value: _pendingBookings,
             color: Colors.orange,
             width: width,
@@ -738,7 +884,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Expanded(
           child: _buildStatusCard(
             icon: '✅',
-            label: 'Confirmed',
+            label: context.tr('confirmed'),
             value: _confirmedBookings,
             color: Colors.green,
             width: width,
@@ -766,7 +912,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         border: Border.all(color: color.withOpacity(0.3), width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -798,7 +944,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 label,
                 style: TextStyle(
                   fontSize: width * 0.03,
-                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  color: context.textSecondary,
                 ),
               ),
             ],
@@ -816,6 +962,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       {'icon': '💰', 'label': 'Payments', 'screen': 'payments'},
       {'icon': '📊', 'label': 'Analytics', 'screen': 'analytics'},
       {'icon': '⭐', 'label': 'Reviews', 'screen': 'reviews'},
+      {'icon': '❤️', 'label': 'Wishlist', 'screen': 'wishlist'},
       {'icon': '📍', 'label': 'Destination', 'screen': 'destinations'},
       {'icon': '🏨', 'label': 'Hotel', 'screen': 'hotels'},
       {'icon': '🦁', 'label': 'Tour', 'screen': 'tours'},
@@ -867,7 +1014,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -952,6 +1099,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
       return;
     }
+    if (screen == 'wishlist') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const WishlistInsightsScreen()),
+      );
+      return;
+    }
     if (screen == 'destinations') {
       Navigator.push(
         context,
@@ -990,84 +1144,114 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildManagementList(double width, double height) {
     final items = [
       {
+        'type': 'destinations',
         'icon': '📍',
-        'label': 'Destinations',
+        'label': context.tr('destinations'),
         'color': const Color(0xFF4facfe),
         'count': _stats['destinations'] ?? 0,
       },
       {
+        'type': 'hotels',
         'icon': '🏨',
-        'label': 'Hotels & Lodges',
+        'label': context.tr('hotels'),
         'color': const Color(0xFF43e97b),
         'count': _stats['hotels'] ?? 0,
       },
       {
+        'type': 'tours',
         'icon': '🦁',
-        'label': 'Tours & Safaris',
+        'label': context.tr('tours'),
         'color': const Color(0xFFfa709a),
         'count': _stats['tours'] ?? 0,
       },
       {
+        'type': 'beaches',
         'icon': '🏖️',
-        'label': 'Beaches',
+        'label': context.tr('beaches'),
         'color': const Color(0xFF00bcd4),
         'count': _stats['beaches'] ?? 0,
       },
       {
+        'type': 'mountains',
         'icon': '🏔️',
-        'label': 'Mountains',
+        'label': context.tr('mountains'),
         'color': const Color(0xFF795548),
         'count': _stats['mountains'] ?? 0,
       },
       {
+        'type': 'culture',
         'icon': '🎭',
-        'label': 'Culture',
+        'label': context.tr('culture'),
         'color': const Color(0xFF9c27b0),
         'count': _stats['culture'] ?? 0,
       },
       {
+        'type': 'food',
         'icon': '🍛',
-        'label': 'Food',
+        'label': context.tr('food'),
         'color': const Color(0xFFff5722),
         'count': _stats['food'] ?? 0,
       },
       {
+        'type': 'activities',
         'icon': '🎯',
-        'label': 'Activities',
+        'label': context.tr('activities'),
         'color': const Color(0xFFff9a9e),
         'count': _stats['activities'] ?? 0,
       },
       {
+        'type': 'deals',
         'icon': '🎁',
-        'label': 'Deals',
+        'label': context.tr('deals'),
         'color': const Color(0xFFf093fb),
         'count': _stats['deals'] ?? 0,
       },
-      {'icon': '⭐', 'label': 'Reviews', 'color': Colors.amber, 'count': _stats['reviews'] ?? 0},    // ⭐ ONGEZA
-      {'icon': '💬', 'label': 'Live Chats', 'color': Colors.purple, 'count': 0},
       {
+        'type': 'reviews',
+        'icon': '⭐',
+        'label': context.tr('reviews'),
+        'color': Colors.amber,
+        'count': _stats['reviews'] ?? 0
+      }, // ⭐ ONGEZA
+      {
+        'type': 'live_chats',
+        'icon': '💬',
+        'label': context.tr('live_chats'),
+        'color': Colors.purple,
+        'count': 0
+      },
+      {
+        'type': 'bookings',
         'icon': '📅',
-        'label': 'Bookings',
+        'label': context.tr('bookings'),
         'color': const Color(0xFF667eea),
         'count': _stats['bookings'] ?? 0,
       },
       {
+        'type': 'users',
         'icon': '👥',
-        'label': 'Users',
+        'label': context.tr('users'),
         'color': const Color(0xFF38f9d7),
         'count': _stats['users'] ?? 0,
       },
-      {'icon': '💰', 'label': 'Payments', 'color': Colors.green, 'count': 0},
-      {'icon': '📊', 'label': 'Analytics', 'color': Colors.indigo, 'count': 0},
-      {'icon': '🎁', 'label': 'Coupons', 'color': Colors.pink, 'count': 0},
-      {'icon': '❌', 'label': 'Cancellations', 'color': Colors.red, 'count': 0},
+      {'type': 'payments', 'icon': '💰', 'label': context.tr('payments'), 'color': Colors.green, 'count': _paymentsCount},
+      {'type': 'analytics', 'icon': '📊', 'label': context.tr('analytics'), 'color': Colors.indigo, 'count': _stats['bookings'] ?? 0},
+      {'type': 'coupons', 'icon': '🎁', 'label': context.tr('coupons'), 'color': Colors.pink, 'count': _couponsCount},
+      {'type': 'cancellations', 'icon': '❌', 'label': context.tr('cancellations'), 'color': Colors.red, 'count': _cancellationsCount},
+      {
+        'type': 'wishlist_insights',
+        'icon': '❤️',
+        'label': context.tr('wishlist_insights'),
+        'color': const Color(0xFFfa709a),
+        'count': _wishlistInsightsCount,
+      },
     ];
 
     final isDark = context.isDark;
     return Column(
       children: items.map((item) {
         return GestureDetector(
-          onTap: () => _handleManagementTap(item['label'] as String),
+          onTap: () => _handleManagementTap(item['type'] as String),
           child: Container(
             margin: EdgeInsets.only(bottom: height * 0.01),
             padding: EdgeInsets.all(width * 0.035),
@@ -1076,7 +1260,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),
@@ -1102,7 +1286,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     style: TextStyle(
                       fontSize: width * 0.04,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.grey.shade800,
+                      color: context.textPrimary,
                     ),
                   ),
                 ),
@@ -1127,7 +1311,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 SizedBox(width: width * 0.02),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: Colors.grey.shade400,
+                  color: context.textMuted,
                   size: width * 0.035,
                 ),
               ],
@@ -1141,59 +1325,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _handleManagementTap(String label) {
     Widget? screen;
     switch (label) {
-      case 'Destinations':
+      case 'destinations':
         screen = const DestinationsListScreen();
         break;
-      case 'Hotels & Lodges':
+      case 'hotels':
         screen = const HotelsListScreen();
         break;
-      case 'Tours & Safaris':
+      case 'tours':
         screen = const ToursListScreen();
         break;
-      case 'Beaches':
+      case 'beaches':
         screen = const BeachesListScreen();
         break;
-      case 'Mountains':
+      case 'mountains':
         screen = const MountainsListScreen();
         break;
-      case 'Culture':
+      case 'culture':
         screen = const CultureListScreen();
         break;
-      case 'Food':
+      case 'food':
         screen = const FoodListScreen();
         break;
-      case 'Activities':
+      case 'activities':
         screen = const ActivitiesListScreen();
         break;
-      case 'Deals':
+      case 'deals':
         screen = const DealsListScreen();
         break;
-      case 'Bookings':
+      case 'bookings':
         screen = const BookingsListScreen();
         break;
-      case 'Users':
+      case 'users':
         screen = const AdminUsersScreen();
         break;
-      case 'Chats':
+      case 'chats':
         screen = const AdminChatsListScreen();
         break;
-      case 'Notifications':
+      case 'notifications':
         screen = const AdminNotificationsScreen();
         break;
-      case 'Reviews':
+      case 'reviews':
         screen = const AdminReviewsScreen();
         break;
-      case 'Payments':
+      case 'payments':
         screen = const AdminPaymentsScreen();
         break;
-      case 'Analytics':
+      case 'analytics':
         screen = const AdminAnalyticsScreen();
         break;
-      case 'Coupons':
+      case 'coupons':
         screen = const AdminCouponsScreen();
         break;
-      case 'Cancellations':
+      case 'cancellations':
         screen = const AdminCancellationsScreen();
+        break;
+      case 'wishlist_insights':
+        screen = const WishlistInsightsScreen();
         break;
       // case 'Live Chats':
       //   screen = const AdminTurivaChatsScreen();
@@ -1222,8 +1409,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               SizedBox(height: height * 0.01),
               Text(
-                'No bookings yet',
-                style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade500),
+                context.tr('no_bookings'),
+                style: TextStyle(color: context.textSecondary),
               ),
             ],
           ),
@@ -1257,7 +1444,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             color: context.cardBg,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8),
+              BoxShadow(
+                color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.04),
+                blurRadius: 8,
+              ),
             ],
           ),
           child: Row(
@@ -1280,12 +1470,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: width * 0.035,
+                        color: context.textPrimary,
                       ),
                     ),
                     Text(
                       'by ${booking['userName'] ?? 'Guest'}',
                       style: TextStyle(
-                        color: Colors.grey.shade500,
+                        color: context.textSecondary,
                         fontSize: width * 0.028,
                       ),
                     ),

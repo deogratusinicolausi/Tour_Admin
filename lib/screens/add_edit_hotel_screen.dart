@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
+import 'package:geocoding/geocoding.dart';
 import '../models/hotel_model.dart';
 import '../services/firestore_service.dart';
 import '../services/cloudinary_service.dart';
@@ -33,6 +34,8 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _websiteController = TextEditingController();
+  final _latitudeController = TextEditingController();
+  final _longitudeController = TextEditingController();
 
   String _currency = 'USD';
   String _destinationId = '';
@@ -81,6 +84,10 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
     _phoneController.text = h.contactPhone;
     _emailController.text = h.contactEmail;
     _websiteController.text = h.website;
+    _latitudeController.text =
+    h.latitude != 0.0 ? h.latitude.toString() : '';
+    _longitudeController.text =
+    h.longitude != 0.0 ? h.longitude.toString() : '';
     _currency = h.currency;
     _destinationId = h.destinationId;
     _destinationName = h.destinationName;
@@ -159,6 +166,64 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
     }
   }
 
+  // ⭐ AUTO-FIND COORDINATES FROM LOCATION
+  Future<void> _autoFindCoordinates() async {
+    final query = _locationController.text.trim();
+    if (query.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a location first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final results = await locationFromAddress(query);
+      if (results.isNotEmpty) {
+        setState(() {
+          _latitudeController.text =
+              results.first.latitude.toStringAsFixed(6);
+          _longitudeController.text =
+              results.first.longitude.toStringAsFixed(6);
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '✅ Found: ${results.first.latitude.toStringAsFixed(4)}, ${results.first.longitude.toStringAsFixed(4)}',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('❌ Location not found'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -192,6 +257,8 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
       contactPhone: _phoneController.text.trim(),
       contactEmail: _emailController.text.trim(),
       website: _websiteController.text.trim(),
+      latitude: double.tryParse(_latitudeController.text.trim()) ?? 0.0,
+      longitude: double.tryParse(_longitudeController.text.trim()) ?? 0.0,
       createdAt: widget.hotel?.createdAt ?? DateTime.now(),
     );
 
@@ -227,6 +294,8 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
     _phoneController.dispose();
     _emailController.dispose();
     _websiteController.dispose();
+    _latitudeController.dispose();
+    _longitudeController.dispose();
     super.dispose();
   }
 
@@ -238,7 +307,9 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
     return Scaffold(
       backgroundColor: context.pageBg,
       appBar: AppBar(
-        title: Text(isEditing ? '✏️ ${context.tr('edit_hotel')}' : '➕ ${context.tr('add_hotel')}'),
+        title: Text(isEditing
+            ? '✏️ ${context.tr('edit_hotel')}'
+            : '➕ ${context.tr('add_hotel')}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -249,7 +320,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // MAIN IMAGE
+              // ═══════ MAIN IMAGE ═══════
               _buildSectionTitle('📸 ${context.tr('main_image')}', width),
               SizedBox(height: height * 0.01),
               GestureDetector(
@@ -287,8 +358,8 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                       SizedBox(height: height * 0.01),
                       Text(
                         context.tr('tap_to_upload_image'),
-                        style:
-                        TextStyle(color: context.textSecondary),
+                        style: TextStyle(
+                            color: context.textSecondary),
                       ),
                     ],
                   )
@@ -297,8 +368,9 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              // GALLERY
-              _buildSectionTitle('🖼️ ${context.tr('gallery_optional')}', width),
+              // ═══════ GALLERY ═══════
+              _buildSectionTitle(
+                  '🖼️ ${context.tr('gallery_optional')}', width),
               SizedBox(height: height * 0.01),
               SizedBox(
                 height: height * 0.12,
@@ -317,7 +389,8 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                           decoration: BoxDecoration(
                             color: context.cardBg,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300),
+                            border:
+                            Border.all(color: Colors.grey.shade300),
                           ),
                           child: Icon(Icons.add,
                               color: Colors.grey.shade400,
@@ -342,8 +415,8 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                           top: 4,
                           right: 4,
                           child: GestureDetector(
-                            onTap: () =>
-                                setState(() => _gallery.removeAt(index)),
+                            onTap: () => setState(
+                                    () => _gallery.removeAt(index)),
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: const BoxDecoration(
@@ -362,7 +435,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              // BASIC INFO
+              // ═══════ BASIC INFO ═══════
               _buildSectionTitle('📝 ${context.tr('basic_info')}', width),
               SizedBox(height: height * 0.01),
 
@@ -370,7 +443,8 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                 controller: _nameController,
                 label: context.tr('hotel_name'),
                 icon: Icons.hotel,
-                validator: (v) => v!.isEmpty ? context.tr('name_required') : null,
+                validator: (v) =>
+                v!.isEmpty ? context.tr('name_required') : null,
               ),
               SizedBox(height: height * 0.015),
 
@@ -395,8 +469,8 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                 }).toList(),
                 onChanged: (value) {
                   if (value != null) {
-                    final dest = _destinations
-                        .firstWhere((d) => d['id'] == value);
+                    final dest =
+                    _destinations.firstWhere((d) => d['id'] == value);
                     setState(() {
                       _destinationId = value;
                       _destinationName = dest['name'] ?? '';
@@ -413,6 +487,72 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               ),
               SizedBox(height: height * 0.015),
 
+              // ⭐ COORDINATES ROW
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _latitudeController,
+                      label: 'Latitude',
+                      icon: Icons.my_location,
+                      keyboardType:
+                      const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: width * 0.03),
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _longitudeController,
+                      label: 'Longitude',
+                      icon: Icons.explore,
+                      keyboardType:
+                      const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: height * 0.01),
+
+              // ⭐ AUTO-FIND BUTTON
+              GestureDetector(
+                onTap: _autoFindCoordinates,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: width * 0.04,
+                    vertical: height * 0.012,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentGold.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.accentGold),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search,
+                          color: AppColors.accentGold,
+                          size: width * 0.05),
+                      SizedBox(width: width * 0.02),
+                      Text(
+                        'Auto-find coordinates',
+                        style: TextStyle(
+                          color: AppColors.accentGold,
+                          fontWeight: FontWeight.bold,
+                          fontSize: width * 0.032,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: height * 0.015),
+
               _buildTextField(
                 controller: _descriptionController,
                 label: context.tr('description'),
@@ -421,7 +561,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              // PRICE
+              // ═══════ PRICE ═══════
               _buildSectionTitle('💰 ${context.tr('pricing')}', width),
               SizedBox(height: height * 0.01),
               Row(
@@ -433,18 +573,20 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                       label: context.tr('price_from'),
                       icon: Icons.attach_money,
                       keyboardType: TextInputType.number,
-                      validator: (v) => v!.isEmpty ? context.tr('price_required') : null,
+                      validator: (v) =>
+                      v!.isEmpty ? context.tr('price_required') : null,
                     ),
                   ),
                   SizedBox(width: width * 0.03),
                   Expanded(
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                          horizontal: width * 0.03, vertical: height * 0.02),
+                          horizontal: width * 0.03,
+                          vertical: height * 0.02),
                       decoration: BoxDecoration(
                         color: context.cardBg,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
+                        border: Border.all(color: Colors.grey.shade800),
                       ),
                       child: DropdownButton<String>(
                         value: _currency,
@@ -465,7 +607,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              // FACILITIES
+              // ═══════ FACILITIES ═══════
               _buildSectionTitle('🏨 ${context.tr('facilities')}', width),
               SizedBox(height: height * 0.01),
               Container(
@@ -496,12 +638,12 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.primary
-                              : Colors.grey.shade100,
+                              : Colors.grey.shade800,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected
                                 ? AppColors.primary
-                                : Colors.grey.shade300,
+                                : Colors.grey.shade800,
                           ),
                         ),
                         child: Row(
@@ -514,7 +656,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                               style: TextStyle(
                                 color: isSelected
                                     ? Colors.white
-                                    : Colors.grey.shade700,
+                                    : Colors.grey.shade50,
                                 fontSize: 12,
                                 fontWeight: isSelected
                                     ? FontWeight.bold
@@ -530,7 +672,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              // CONTACT
+              // ═══════ CONTACT ═══════
               _buildSectionTitle('📞 ${context.tr('contact_info')}', width),
               SizedBox(height: height * 0.01),
               _buildTextField(
@@ -555,7 +697,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              // RATING
+              // ═══════ RATING ═══════
               _buildSectionTitle('⭐ ${context.tr('rating')}', width),
               SizedBox(height: height * 0.01),
               Container(
@@ -594,7 +736,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               ),
               SizedBox(height: height * 0.025),
 
-              // SETTINGS
+              // ═══════ SETTINGS ═══════
               _buildSectionTitle('⚙️ ${context.tr('settings')}', width),
               SizedBox(height: height * 0.01),
               Container(
@@ -622,7 +764,8 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(context.tr('status'),
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                        style:
+                        const TextStyle(fontWeight: FontWeight.bold)),
                     SizedBox(height: height * 0.01),
                     Row(
                       children: ['active', 'inactive'].map((s) {
@@ -662,7 +805,7 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
               ),
               SizedBox(height: height * 0.03),
 
-              // SAVE
+              // ═══════ SAVE ═══════
               SizedBox(
                 width: double.infinity,
                 height: 55,
@@ -677,7 +820,9 @@ class _AddEditHotelScreenState extends State<AddEditHotelScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                    isEditing ? context.tr('update_hotel').toUpperCase() : context.tr('add_hotel').toUpperCase(),
+                    isEditing
+                        ? context.tr('update_hotel').toUpperCase()
+                        : context.tr('add_hotel').toUpperCase(),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

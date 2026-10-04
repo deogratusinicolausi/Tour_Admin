@@ -18,7 +18,17 @@ void main() async {
       storageBucket: "turiva.firebasestorage.app",
     ),
   );
-  runApp(const TurivaAdminApp());
+
+  // ⭐️ ONGEZA: Load theme provider BEFORE runApp
+  final themeProvider = AppThemeProvider();
+  await themeProvider.loadSettings();
+
+  runApp(
+    ChangeNotifierProvider<AppThemeProvider>.value(
+      value: themeProvider,
+      child: const TurivaAdminApp(),
+    ),
+  );
 }
 
 class TurivaAdminApp extends StatelessWidget {
@@ -26,23 +36,20 @@ class TurivaAdminApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AppThemeProvider()..loadSettings(),
-      child: Consumer<AppThemeProvider>(
-        builder: (context, themeProvider, _) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'TURIVA ADMIN',
-            themeMode: themeProvider.themeMode,
-            theme: _buildLightTheme(),
-            darkTheme: _buildDarkTheme(),
-            routes: {
-              '/gesture-control': (context) => const GestureControlScreen(),
-            },
-            home: const AdminLoginScreen(),
-          );
-        },
-      ),
+    return Consumer<AppThemeProvider>(
+      builder: (context, themeProvider, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'TURIVA ADMIN',
+          themeMode: themeProvider.themeMode,
+          theme: _buildLightTheme(),
+          darkTheme: _buildDarkTheme(),
+          routes: {
+            '/gesture-control': (context) => const GestureControlScreen(),
+          },
+          home: const AdminLoginScreen(),
+        );
+      },
     );
   }
 

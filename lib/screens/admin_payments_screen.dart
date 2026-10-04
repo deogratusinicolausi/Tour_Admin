@@ -167,7 +167,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
       backgroundColor: context.pageBg,
       appBar: AppBar(
         title: Text('💰 ${context.tr('payments')}'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: context.isDark ? const Color(0xFF1A237E) : AppColors.primary,
         foregroundColor: Colors.white,
       ),
       body: Column(
@@ -178,23 +178,27 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
           // SEARCH
           Container(
             padding: EdgeInsets.all(width * 0.04),
-            color: AppColors.primary,
-            child: Container(
-              decoration: BoxDecoration(
-                color: context.cardBg,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (v) =>
-                    setState(() => _searchQuery = v.toLowerCase()),
-                decoration: InputDecoration(
-                  hintText: context.tr('search_payments'),
-                  prefixIcon: const Icon(Icons.search),
-                  border: InputBorder.none,
-                  contentPadding:
-                  EdgeInsets.symmetric(vertical: height * 0.015),
-                  suffixIcon: _searchQuery.isNotEmpty
+            color: context.isDark ? const Color(0xFF1A237E) : AppColors.primary,
+            child: TextField(
+              controller: _searchController,
+              onChanged: (v) =>
+                  setState(() => _searchQuery = v.toLowerCase()),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: context.cardBg,
+                hintText: context.tr('search_payments'),
+                hintStyle: TextStyle(color: context.textMuted),
+                prefixIcon: Icon(Icons.search, color: context.textSecondary),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: context.borderColor,
+                    width: 1,
+                  ),
+                ),
+                contentPadding:
+                EdgeInsets.symmetric(vertical: height * 0.015),
+                suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
                     icon: const Icon(Icons.clear),
                     onPressed: () {
@@ -203,7 +207,6 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                     },
                   )
                       : null,
-                ),
               ),
             ),
           ),
@@ -212,7 +215,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
           Container(
             padding: EdgeInsets.symmetric(
                 horizontal: width * 0.04, vertical: height * 0.008),
-            color: AppColors.primary,
+            color: context.isDark ? const Color(0xFF1A237E) : AppColors.primary,
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -229,7 +232,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppColors.accentGold
-                            : Colors.white.withOpacity(0.15),
+                            : context.chipBg,
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: Text(
@@ -238,7 +241,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                             : context.tr(status).toUpperCase(),
                         style: TextStyle(
                           color:
-                          isSelected ? Colors.black : Colors.white70,
+                          isSelected ? Colors.black : context.textPrimary,
                           fontWeight: FontWeight.bold,
                           fontSize: width * 0.024,
                         ),
@@ -268,12 +271,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                 return ListView.builder(
                   padding: EdgeInsets.all(width * 0.04),
                   itemCount: payments.length,
-                  itemBuilder: (context, i) => PaymentCard(
-                    payment: payments[i],
-                    onApprove: () => _approve(payments[i]),
-                    onRefund: () => _refund(payments[i]),
-                    onDelete: () => _delete(payments[i]),
-                  ),
+                  itemBuilder: (context, i) => _buildPaymentCard(payments[i], width, height),
                 );
               },
             ),
@@ -286,7 +284,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
   Widget _buildStats(double width, double height) {
     return Container(
       padding: EdgeInsets.all(width * 0.04),
-      color: AppColors.primary,
+      color: context.isDark ? const Color(0xFF1A237E) : AppColors.primary,
       child: Column(
         children: [
           // Main stats
@@ -336,15 +334,22 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                 child: Container(
                   padding: EdgeInsets.all(width * 0.03),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: context.isDark
+                        ? Colors.blue.withOpacity(0.15)
+                        : Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: context.isDark
+                          ? Colors.blue.withOpacity(0.3)
+                          : Colors.transparent,
+                    ),
                   ),
                   child: Column(
                     children: [
                       Text(
                         '${_stats['total'] ?? 0}',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: context.isDark ? Colors.blue.shade200 : Colors.white,
                           fontSize: width * 0.055,
                           fontWeight: FontWeight.bold,
                         ),
@@ -365,13 +370,13 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
           Row(
             children: [
               _subStat('✅', '${_stats['completed'] ?? 0}', context.tr('completed'),
-                  Colors.green, width),
+                  Colors.green, width, context),
               _subStat('⏳', '${_stats['pending'] ?? 0}', context.tr('pending'),
-                  Colors.orange, width),
+                  Colors.orange, width, context),
               _subStat('❌', '${_stats['failed'] ?? 0}', context.tr('failed'),
-                  Colors.red, width),
+                  Colors.red, width, context),
               _subStat('💰', '${_stats['refunded'] ?? 0}', context.tr('refunded'),
-                  Colors.blue, width),
+                  Colors.purple, width, context),
             ],
           ),
         ],
@@ -380,15 +385,28 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
   }
 
   Widget _subStat(String emoji, String value, String label, Color color,
-      double width) {
+      double width, BuildContext context) {
+    Color bgColor;
+    if (color == Colors.green) bgColor = Colors.green;
+    else if (color == Colors.orange) bgColor = Colors.orange;
+    else if (color == Colors.red) bgColor = Colors.red;
+    else bgColor = Colors.purple;
+
     return Expanded(
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: width * 0.005),
         padding: EdgeInsets.symmetric(
             horizontal: width * 0.02, vertical: width * 0.025),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.12),
+          color: context.isDark
+              ? bgColor.withOpacity(0.15)
+              : Colors.white.withOpacity(0.12),
           borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: context.isDark
+                ? bgColor.withOpacity(0.3)
+                : Colors.transparent,
+          ),
         ),
         child: Column(
           children: [
@@ -397,7 +415,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
             Text(
               value,
               style: TextStyle(
-                color: color,
+                color: context.isDark ? color.withOpacity(0.8) : color,
                 fontWeight: FontWeight.bold,
                 fontSize: width * 0.035,
               ),
@@ -405,12 +423,14 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
             Text(
               label,
               style: TextStyle(
-                color: Colors.white70,
+                color: context.isDark ? context.textSecondary : Colors.white70,
                 fontSize: width * 0.022,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+            // MUHIMU: "HATUA 7" haitakiwi kubadilishwa hapa kwenye _subStat ya takwimu.
+            // Vifungo halisi vya "Refund" na "Delete" vipo ndani ya file: lib/widgets/payment_card_widget.dart
           ],
         ),
       ),
@@ -431,6 +451,110 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
               fontSize: width * 0.05,
               color: context.textSecondary,
               fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentCard(PaymentModel payment, double width, double height) {
+    final status = payment.status.toLowerCase();
+    MaterialColor statusColor = Colors.grey;
+    if (status == 'completed') statusColor = Colors.green;
+    else if (status == 'pending') statusColor = Colors.orange;
+    else if (status == 'failed') statusColor = Colors.red;
+    else if (status == 'refunded') statusColor = Colors.purple;
+
+    return Container(
+      margin: EdgeInsets.only(bottom: height * 0.015),
+      decoration: BoxDecoration(
+        color: context.cardBg,   // ⬅️ THEME-AWARE
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: context.borderColor,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // ===== HEADER =====
+          Container(
+            padding: EdgeInsets.all(width * 0.04),
+            decoration: BoxDecoration(
+              color: context.isDark
+                  ? statusColor.withOpacity(0.15)
+                  : statusColor.shade50,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  context.tr(payment.status).toUpperCase(),
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: width * 0.032,
+                  ),
+                ),
+                Text(
+                  payment.method.toUpperCase(),
+                  style: TextStyle(
+                    color: context.textSecondary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: width * 0.032,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // ===== BODY =====
+          Padding(
+            padding: EdgeInsets.all(width * 0.04),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${payment.currency} ${payment.amount.toStringAsFixed(0)}',
+                  style: TextStyle(
+                    color: context.isDark ? AppColors.accentGold : Colors.blue.shade900,
+                  ),
+                ),
+                Text(payment.itemName, style: TextStyle(color: context.textPrimary)),
+                Text(payment.userName, style: TextStyle(color: context.textSecondary)),
+                Text(payment.transactionId, style: TextStyle(color: context.textSecondary)),
+                SizedBox(height: height * 0.01),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (status == 'pending')
+                      TextButton(
+                        onPressed: () => _approve(payment),
+                        style: TextButton.styleFrom(foregroundColor: Colors.green),
+                        child: Text(context.tr('approve').toUpperCase()),
+                      ),
+                    if (status == 'completed')
+                      TextButton(
+                        onPressed: () => _refund(payment),
+                        style: TextButton.styleFrom(foregroundColor: Colors.orange),
+                        child: Text(context.tr('refund').toUpperCase()),
+                      ),
+                    TextButton(
+                      onPressed: () => _delete(payment),
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                      child: Text(context.tr('delete').toUpperCase()),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],

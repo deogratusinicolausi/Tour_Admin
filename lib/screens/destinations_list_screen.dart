@@ -4,7 +4,6 @@ import '../services/firestore_service.dart';
 import '../utils/colors.dart';
 import '../utils/theme_helper.dart';
 import '../utils/translate_helper.dart';
-import 'package:provider/provider.dart';
 import 'add_edit_destination_screen.dart';
 
 class DestinationsListScreen extends StatefulWidget {
@@ -119,7 +118,7 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
                       EdgeInsets.symmetric(vertical: height * 0.015),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: Icon(Icons.clear, color: context.textMuted),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
@@ -150,7 +149,7 @@ class _DestinationsListScreenState extends State<DestinationsListScreen> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          status.toUpperCase(),
+                          context.tr(status).toUpperCase(),
                           style: TextStyle(
                             color: isSelected ? Colors.black : Colors.white,
                             fontWeight: FontWeight.bold,

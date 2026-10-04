@@ -33,6 +33,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       );
 
       if (user != null) {
+        // Intentional security role verification delay (Hatua C)
         String? role = await _auth.getUserRole(user.uid);
 
         if (role == 'admin' || role == 'superAdmin') {

@@ -15,6 +15,58 @@ class ExportService {
 
   // ⭐️ ===== CSV EXPORT =====
 
+  Future<void> exportWishlistToCsv() async {
+    try {
+      // Fetch all wishlists
+      final snapshot = await _firestore.collection('wishlists').get();
+
+      if (snapshot.docs.isEmpty) {
+        throw Exception('No data to export');
+      }
+
+      // Build CSV rows
+      final rows = <List<dynamic>>[
+        [
+          'User ID',
+          'Item ID',
+          'Item Name',
+          'Item Type',
+          'Price',
+          'Currency',
+          'Liked At',
+        ],
+      ];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final ts = data['createdAt'] as Timestamp?;
+
+        rows.add([
+          data['userId'] ?? '',
+          data['itemId'] ?? '',
+          data['itemName'] ?? '',
+          data['itemType'] ?? '',
+          data['price'] ?? 0,
+          data['currency'] ?? 'USD',
+          ts != null ? DateFormat('yyyy-MM-dd HH:mm').format(ts.toDate()) : '',
+        ]);
+      }
+
+      // Convert and save
+      final csvData = const ListToCsvConverter().convert(rows);
+      final dir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final path = '${dir.path}/turiva_wishlist_$timestamp.csv';
+      await File(path).writeAsString(csvData);
+
+      // Share
+      await shareCSVFile(path, 'Wishlist');
+    } catch (e) {
+      print('🔥 Export error: $e');
+      rethrow;
+    }
+  }
+
   Future<String> exportCollectionToCSV(
       String collection, {
         List<String>? selectedFields,
@@ -52,14 +104,15 @@ class ExportService {
       final csv = const ListToCsvConverter().convert(rows);
 
       // Save file
-      String basePath;
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      String path;
       if (kIsWeb) {
-        basePath = 'downloads';
+        // Note: For web, you usually trigger a browser download
+        path = 'turiva_${collection}_$timestamp.csv';
       } else {
         final dir = await getApplicationDocumentsDirectory();
-        basePath = dir.path;
+        path = '${dir.path}/turiva_${collection}_$timestamp.csv';
       }
-      final path = '$basePath/...';
 
       final file = File(path);
       await file.writeAsString(csv);

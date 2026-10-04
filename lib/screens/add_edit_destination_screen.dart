@@ -163,8 +163,8 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Video uploaded!'),
+          SnackBar(
+            content: Text('✅ ${context.tr('video_uploaded')}!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -433,7 +433,7 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
                                 Icon(Icons.video_call,
                                     size: width * 0.15, color: Colors.grey.shade400),
                                 SizedBox(height: height * 0.01),
-                                Text('Tap to upload video',
+                                Text(context.tr('tap_to_upload_video'),
                                     style: TextStyle(color: context.textSecondary)),
                               ],
                             )
@@ -602,8 +602,8 @@ class _AddEditDestinationScreenState extends State<AddEditDestinationScreen> {
                               color: isSelected
                                   ? (s == 'active'
                                   ? Colors.green
-                                  : Colors.grey)
-                                  : Colors.grey.shade200,
+                                  : Colors.green)
+                                  : Colors.grey,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(

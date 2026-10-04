@@ -30,6 +30,10 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
   final _durationController = TextEditingController();
   final _maxPeopleController = TextEditingController(text: '10');
 
+  // ⭐ NEW — Location controllers
+  final _latitudeController = TextEditingController();
+  final _longitudeController = TextEditingController();
+
   final _itineraryController = TextEditingController();
   final _includedController = TextEditingController();
   final _excludedController = TextEditingController();
@@ -88,6 +92,12 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
     _rating = t.rating;
     _featured = t.featured;
     _status = t.status;
+
+    // ⭐ Load existing coordinates
+    if (t.latitude != 0.0 || t.longitude != 0.0) {
+      _latitudeController.text = t.latitude.toString();
+      _longitudeController.text = t.longitude.toString();
+    }
   }
 
   Future<void> _loadDestinations() async {
@@ -179,6 +189,8 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
       status: _status,
       tourType: _tourType,
       maxPeople: int.tryParse(_maxPeopleController.text) ?? 10,
+      latitude: double.tryParse(_latitudeController.text.trim()) ?? 0.0,
+      longitude: double.tryParse(_longitudeController.text.trim()) ?? 0.0,
       createdAt: widget.tour?.createdAt ?? DateTime.now(),
     );
 
@@ -215,6 +227,8 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
     _itineraryController.dispose();
     _includedController.dispose();
     _excludedController.dispose();
+    _latitudeController.dispose();
+    _longitudeController.dispose();
     super.dispose();
   }
 
@@ -346,6 +360,66 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
               ),
               SizedBox(height: height * 0.015),
 
+              // ⭐ NEW — Location section
+              _buildSectionTitle('📍 Location (for map)', width),
+              SizedBox(height: height * 0.01),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _latitudeController,
+                      label: 'Latitude',
+                      icon: Icons.my_location,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: width * 0.03),
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _longitudeController,
+                      label: 'Longitude',
+                      icon: Icons.my_location,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: height * 0.01),
+
+              // Hint text
+              Container(
+                padding: EdgeInsets.all(width * 0.03),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline,
+                        color: Colors.amber.shade800, size: width * 0.045),
+                    SizedBox(width: width * 0.02),
+                    Expanded(
+                      child: Text(
+                        'Tip: Open Google Maps → right-click on location → copy coordinates (e.g. -3.2360, 35.4910)',
+                        style: TextStyle(
+                          fontSize: width * 0.028,
+                          color: Colors.amber.shade900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: height * 0.015),
+
               _buildTextField(
                 controller: _descriptionController,
                 label: context.tr('description'),
@@ -377,7 +451,7 @@ class _AddEditTourScreenState extends State<AddEditTourScreen> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.primary
-                              : Colors.grey.shade100,
+                              : Colors.grey.shade800,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(

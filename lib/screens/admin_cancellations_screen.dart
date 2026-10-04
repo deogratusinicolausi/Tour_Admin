@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/cancellation_model.dart';
 import '../services/cancellation_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
 
 class AdminCancellationsScreen extends StatefulWidget {
   const AdminCancellationsScreen({super.key});
@@ -35,10 +36,10 @@ class _AdminCancellationsScreenState
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
         title: const Text('❌ Cancellations & Refunds'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: context.isDark ? const Color(0xFF1A237E) : AppColors.primary,
         foregroundColor: Colors.white,
       ),
       body: Column(
@@ -82,14 +83,13 @@ class _AdminCancellationsScreenState
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppColors.accentGold
-                            : Colors.white.withOpacity(0.2),
+                            : context.chipBg,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         f.toUpperCase(),
                         style: TextStyle(
-                          color:
-                          isSelected ? Colors.black : Colors.white,
+                          color: isSelected ? Colors.black : context.textPrimary,
                           fontWeight: FontWeight.bold,
                           fontSize: width * 0.028,
                         ),
@@ -143,8 +143,18 @@ class _AdminCancellationsScreenState
         padding: EdgeInsets.symmetric(
             horizontal: width * 0.02, vertical: width * 0.025),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(10),
+          color: context.cardBg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.borderColor,
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.05),
+              blurRadius: 8,
+            ),
+          ],
         ),
         child: Column(
           children: [
@@ -193,11 +203,15 @@ class _AdminCancellationsScreenState
     return Container(
       margin: EdgeInsets.only(bottom: height * 0.015),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: context.borderColor,
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(context.isDark ? 0.3 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -270,6 +284,7 @@ class _AdminCancellationsScreenState
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: width * 0.04,
+                              color: context.textPrimary,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -278,7 +293,7 @@ class _AdminCancellationsScreenState
                           Text(
                             'by ${c.userName}',
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: context.textSecondary,
                               fontSize: width * 0.03,
                             ),
                           ),
@@ -319,8 +334,14 @@ class _AdminCancellationsScreenState
                 Container(
                   padding: EdgeInsets.all(width * 0.03),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
+                    color: context.isDark
+                        ? Colors.orange.withOpacity(0.1)
+                        : Colors.orange.shade50,
                     borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: context.borderColor,
+                      width: 1,
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,7 +351,7 @@ class _AdminCancellationsScreenState
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: width * 0.03,
-                          color: Colors.grey.shade700,
+                          color: context.textPrimary,
                         ),
                       ),
                       SizedBox(height: height * 0.005),
@@ -338,7 +359,7 @@ class _AdminCancellationsScreenState
                         c.reasonText,
                         style: TextStyle(
                           fontSize: width * 0.032,
-                          color: Colors.grey.shade800,
+                          color: context.textPrimary,
                         ),
                       ),
                       if (c.additionalNotes.isNotEmpty) ...[
@@ -410,8 +431,14 @@ class _AdminCancellationsScreenState
     return Container(
       padding: EdgeInsets.all(width * 0.03),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: context.isDark
+            ? Colors.white.withOpacity(0.05)
+            : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: context.borderColor,
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,8 +447,7 @@ class _AdminCancellationsScreenState
             label,
             style: TextStyle(
               fontSize: width * 0.026,
-              color: color,
-              fontWeight: FontWeight.bold,
+              color: context.textSecondary,
             ),
           ),
           SizedBox(height: width * 0.005),
@@ -430,7 +456,7 @@ class _AdminCancellationsScreenState
             style: TextStyle(
               fontSize: width * 0.04,
               fontWeight: FontWeight.bold,
-              color: color,
+              color: context.textPrimary,
             ),
           ),
         ],
@@ -450,8 +476,14 @@ class _AdminCancellationsScreenState
       child: Container(
         padding: EdgeInsets.symmetric(vertical: width * 0.03),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: context.isDark
+              ? color.withOpacity(0.15)
+              : color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: color.withOpacity(0.3),
+            width: 1,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

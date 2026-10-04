@@ -21,6 +21,10 @@ class HotelModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
+  // ⭐ NEW: Coordinates
+  final double latitude;
+  final double longitude;
+
   HotelModel({
     required this.id,
     required this.name,
@@ -41,6 +45,8 @@ class HotelModel {
     this.website = '',
     this.createdAt,
     this.updatedAt,
+    this.latitude = 0.0,     // ⭐ NEW
+    this.longitude = 0.0,    // ⭐ NEW
   });
 
   factory HotelModel.fromMap(Map<String, dynamic> map, String id) {
@@ -64,6 +70,8 @@ class HotelModel {
       website: map['website'] ?? '',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
+      latitude: (map['latitude'] ?? 0.0).toDouble(),    // ⭐ NEW
+      longitude: (map['longitude'] ?? 0.0).toDouble(),  // ⭐ NEW
     );
   }
 
@@ -85,6 +93,8 @@ class HotelModel {
       'contactPhone': contactPhone,
       'contactEmail': contactEmail,
       'website': website,
+      'latitude': latitude,     // ⭐ NEW
+      'longitude': longitude,   // ⭐ NEW
       'createdAt': createdAt ?? FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };

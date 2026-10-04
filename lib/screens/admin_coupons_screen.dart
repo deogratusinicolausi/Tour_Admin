@@ -99,7 +99,7 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
       backgroundColor: context.pageBg,
       appBar: AppBar(
         title: Text('🎁 ${context.tr('coupons_promotions')}'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: context.isDark ? const Color(0xFF1A237E) : AppColors.primary,
         foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -114,7 +114,7 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
         backgroundColor: AppColors.accentGold,
         icon: const Icon(Icons.add, color: Colors.black),
         label: Text(
-          context.tr('create_coupon'),
+          'Create Coupon',
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -129,34 +129,37 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
           // ⭐️ SEARCH
           Container(
             padding: EdgeInsets.all(width * 0.04),
-            color: AppColors.primary,
+            color: context.cardBg,
             child: Column(
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: context.cardBg,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (v) =>
-                        setState(() => _searchQuery = v.toLowerCase()),
-                    decoration: InputDecoration(
-                      hintText: context.tr('search_coupons'),
-                      prefixIcon: const Icon(Icons.search),
-                      border: InputBorder.none,
-                      contentPadding:
-                      EdgeInsets.symmetric(vertical: height * 0.015),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                          : null,
+                TextField(
+                  controller: _searchController,
+                  onChanged: (v) =>
+                      setState(() => _searchQuery = v.toLowerCase()),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: context.cardBg,
+                    hintText: context.tr('search_coupons'),
+                    hintStyle: TextStyle(color: context.textMuted),
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: context.borderColor,
+                        width: 1,
+                      ),
                     ),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: height * 0.015),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
                   ),
                 ),
                 SizedBox(height: height * 0.012),
@@ -223,7 +226,7 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
       color: AppColors.primary,
       child: Row(
         children: [
-          _statBox('🎁', '${_stats['total'] ?? 0}', context.tr('total'), Colors.white,
+          _statBox('🎁', '${_stats['total'] ?? 0}', context.tr('total'), context.textPrimary,
               width),
           _statBox('✅', '${_stats['active'] ?? 0}', context.tr('active'),
               Colors.green, width),
@@ -244,8 +247,12 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
         padding: EdgeInsets.symmetric(
             horizontal: width * 0.02, vertical: width * 0.025),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(10),
+          color: context.cardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: context.borderColor,
+            width: 1,
+          ),
         ),
         child: Column(
           children: [
@@ -262,7 +269,7 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
             Text(
               label,
               style: TextStyle(
-                color: Colors.white70,
+                color: context.textSecondary,
                 fontSize: width * 0.022,
               ),
             ),
@@ -284,13 +291,13 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.accentGold
-              : Colors.white.withOpacity(0.2),
+              : context.chipBg,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.black : Colors.white,
+            color: isSelected ? Colors.black : context.textPrimary,
             fontWeight: FontWeight.bold,
             fontSize: width * 0.028,
           ),

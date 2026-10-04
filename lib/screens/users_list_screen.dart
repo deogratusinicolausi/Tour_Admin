@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/user_model.dart';
 import '../services/firestore_service.dart';
 import '../utils/colors.dart';
+import '../utils/theme_helper.dart';
 
 class UsersListScreen extends StatefulWidget {
   const UsersListScreen({super.key});
@@ -110,10 +111,10 @@ class _UsersListScreenState extends State<UsersListScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
         title: const Text('👥 Users'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: context.isDark ? const Color(0xFF1A237E) : AppColors.primary,
         foregroundColor: Colors.white,
       ),
       body: Column(
@@ -121,7 +122,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
           // STATS
           Container(
             padding: EdgeInsets.all(width * 0.04),
-            color: AppColors.primary,
+            color: context.isDark ? const Color(0xFF1A237E) : AppColors.primary,
             child: Row(
               children: [
                 _statBadge('Total', _stats['total'] ?? 0, Colors.white, width),
@@ -135,16 +136,21 @@ class _UsersListScreenState extends State<UsersListScreen> {
           // SEARCH + FILTER
           Container(
             padding: EdgeInsets.all(width * 0.04),
-            color: AppColors.primary,
+            color: context.isDark ? const Color(0xFF1A237E) : AppColors.primary,
             child: Column(
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: context.borderColor,
+                      width: 1,
+                    ),
                   ),
                   child: TextField(
                     controller: _searchController,
+                    style: TextStyle(color: context.textPrimary),
                     onChanged: (v) =>
                         setState(() => _searchQuery = v.toLowerCase()),
                     decoration: InputDecoration(
@@ -155,7 +161,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                       EdgeInsets.symmetric(vertical: height * 0.015),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: Icon(Icons.clear, color: context.textMuted),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
@@ -232,13 +238,13 @@ class _UsersListScreenState extends State<UsersListScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.people_outline,
-                            size: width * 0.2, color: Colors.grey.shade300),
+                            size: width * 0.2, color: context.textMuted),
                         const SizedBox(height: 20),
                         Text(
                           'No users found',
                           style: TextStyle(
                               fontSize: width * 0.05,
-                              color: Colors.grey.shade600,
+                              color: context.textSecondary,
                               fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -306,7 +312,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: height * 0.015),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -317,7 +323,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         ],
         border: isBanned
             ? Border.all(color: Colors.red.withOpacity(0.3), width: 2)
-            : null,
+            : Border.all(color: context.borderColor, width: 1),
       ),
       child: Padding(
         padding: EdgeInsets.all(width * 0.04),
@@ -359,7 +365,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                               style: TextStyle(
                                 fontSize: width * 0.04,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade800,
+                                color: context.textPrimary,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -388,7 +394,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                         u.email,
                         style: TextStyle(
                             fontSize: width * 0.028,
-                            color: Colors.grey.shade500),
+                            color: context.textMuted),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -489,9 +495,13 @@ class _UsersListScreenState extends State<UsersListScreen> {
 
     return Container(
       padding: EdgeInsets.all(width * 0.05),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(
+          color: context.borderColor,
+          width: 1,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -502,7 +512,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: context.dividerColor,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -510,7 +520,11 @@ class _UsersListScreenState extends State<UsersListScreen> {
           SizedBox(height: width * 0.05),
           Text(
             'Change Role for ${u.name}',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: context.textPrimary,
+            ),
           ),
           SizedBox(height: width * 0.03),
           _roleTile(u, 'customer', '👤', 'Customer', 'Regular app user', Colors.blue, width),
@@ -531,10 +545,18 @@ class _UsersListScreenState extends State<UsersListScreen> {
         margin: EdgeInsets.only(bottom: width * 0.02),
         padding: EdgeInsets.all(width * 0.04),
         decoration: BoxDecoration(
-          color: isCurrent ? color.withOpacity(0.1) : Colors.grey.shade50,
+          color: isCurrent
+              ? color.withOpacity(0.1)
+              : context.isDark
+                  ? Colors.white.withOpacity(0.05)
+                  : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isCurrent ? color : Colors.grey.shade200,
+            color: isCurrent
+                ? color
+                : context.isDark
+                    ? Colors.white.withOpacity(0.2)
+                    : Colors.grey.shade200,
             width: 2,
           ),
         ),
@@ -547,11 +569,13 @@ class _UsersListScreenState extends State<UsersListScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16)),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: context.textPrimary)),
                   Text(desc,
                       style: TextStyle(
-                          color: Colors.grey.shade600, fontSize: 12)),
+                          color: context.textSecondary, fontSize: 12)),
                 ],
               ),
             ),
@@ -573,9 +597,13 @@ class _UsersListScreenState extends State<UsersListScreen> {
       maxChildSize: 0.95,
       builder: (_, controller) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: context.cardBg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(
+              color: context.borderColor,
+              width: 1,
+            ),
           ),
           child: Column(
             children: [
@@ -584,7 +612,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: context.dividerColor,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -594,9 +622,11 @@ class _UsersListScreenState extends State<UsersListScreen> {
                   children: [
                     const Icon(Icons.person, color: AppColors.primary, size: 28),
                     SizedBox(width: width * 0.03),
-                    const Text('User Profile',
+                    Text('User Profile',
                         style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold)),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: context.textPrimary)),
                     const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.close),
@@ -605,7 +635,10 @@ class _UsersListScreenState extends State<UsersListScreen> {
                   ],
                 ),
               ),
-              const Divider(height: 1),
+              Divider(
+                height: 1,
+                color: context.dividerColor,
+              ),
               Expanded(
                 child: SingleChildScrollView(
                   controller: controller,
@@ -636,14 +669,16 @@ class _UsersListScreenState extends State<UsersListScreen> {
                       SizedBox(height: height * 0.02),
                       Center(
                         child: Text(u.name,
-                            style: const TextStyle(
-                                fontSize: 22, fontWeight: FontWeight.bold)),
+                            style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: context.textPrimary)),
                       ),
                       SizedBox(height: height * 0.005),
                       Center(
                         child: Text(u.email,
                             style: TextStyle(
-                                color: Colors.grey.shade600, fontSize: 14)),
+                                color: context.textSecondary, fontSize: 14)),
                       ),
                       SizedBox(height: height * 0.03),
                       _detailRow('User ID', u.uid.substring(0, 12), width),
@@ -716,14 +751,14 @@ class _UsersListScreenState extends State<UsersListScreen> {
             width: width * 0.32,
             child: Text(label,
                 style: TextStyle(
-                    color: Colors.grey.shade600, fontSize: width * 0.032)),
+                    color: context.textSecondary, fontSize: width * 0.032)),
           ),
           Expanded(
             child: Text(value,
                 style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: width * 0.032,
-                    color: Colors.grey.shade800)),
+                    color: context.textPrimary)),
           ),
         ],
       ),

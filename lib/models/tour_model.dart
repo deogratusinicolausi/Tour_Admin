@@ -18,6 +18,11 @@ class TourModel {
   final String status;
   final String tourType;
   final int maxPeople;
+
+  // ⭐ NEW — Location coordinates
+  final double latitude;
+  final double longitude;
+
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -39,6 +44,8 @@ class TourModel {
     this.status = 'active',
     this.tourType = 'Safari',
     this.maxPeople = 10,
+    this.latitude = 0.0,      // ⭐ NEW
+    this.longitude = 0.0,     // ⭐ NEW
     this.createdAt,
     this.updatedAt,
   });
@@ -62,6 +69,8 @@ class TourModel {
       status: map['status'] ?? 'active',
       tourType: map['tourType'] ?? 'Safari',
       maxPeople: map['maxPeople'] ?? 10,
+      latitude: (map['latitude'] ?? 0.0).toDouble(),    // ⭐ NEW
+      longitude: (map['longitude'] ?? 0.0).toDouble(),  // ⭐ NEW
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
     );
@@ -85,6 +94,8 @@ class TourModel {
       'status': status,
       'tourType': tourType,
       'maxPeople': maxPeople,
+      'latitude': latitude,     // ⭐ NEW
+      'longitude': longitude,   // ⭐ NEW
       'createdAt': createdAt ?? FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };

@@ -205,6 +205,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               decoration: BoxDecoration(
                 color: context.cardBg,
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: context.borderColor,
+                  width: 1,
+                ),
               ),
               child: TextField(
                 controller: _searchController,
@@ -455,6 +459,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       decoration: BoxDecoration(
         color: context.cardBg,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(
+          color: context.borderColor,
+          width: 1,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -496,10 +504,18 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         margin: EdgeInsets.only(bottom: width * 0.02),
         padding: EdgeInsets.all(width * 0.04),
         decoration: BoxDecoration(
-          color: isCurrent ? color.withOpacity(0.1) : context.pageBg,
+          color: isCurrent
+              ? color.withOpacity(0.1)
+              : context.isDark
+                  ? Colors.white.withOpacity(0.05)
+                  : context.pageBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isCurrent ? color : context.textSecondary.withOpacity(0.1),
+            color: isCurrent
+                ? color
+                : context.isDark
+                    ? Colors.white.withOpacity(0.2)
+                    : context.textSecondary.withOpacity(0.1),
             width: 2,
           ),
         ),
