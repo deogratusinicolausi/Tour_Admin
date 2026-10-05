@@ -34,6 +34,8 @@ import '../providers/app_theme_provider.dart';
 import '../services/turiva_chat_service.dart';
 import 'wishlist_insights_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'admin_feed_screen.dart';
+import '../services/feed_admin_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -59,6 +61,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _couponsCount = 0;
   int _cancellationsCount = 0;
   int _wishlistInsightsCount = 0;
+  int _feedPostsCount = 0;
   bool _isLoading = true;
   String _userName = 'Admin';
 
@@ -149,12 +152,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Wishlist insights — count wishlist items
       final wishlistsSnap = await firestore.collection('wishlists').get();
 
+      // ⭐ ONGEZA — feed count
+      final feedSnap = await firestore.collection('feed_posts').get();
+
       if (mounted) {
         setState(() {
           _paymentsCount = paymentsSnap.docs.length;
           _couponsCount = couponsSnap.docs.length;
           _cancellationsCount = cancellationsSnap.docs.length;
           _wishlistInsightsCount = wishlistsSnap.docs.length;
+          _feedPostsCount = feedSnap.docs.length;
         });
       }
     } catch (e) {
@@ -966,6 +973,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       {'icon': '📍', 'label': 'Destination', 'screen': 'destinations'},
       {'icon': '🏨', 'label': 'Hotel', 'screen': 'hotels'},
       {'icon': '🦁', 'label': 'Tour', 'screen': 'tours'},
+      {'icon': '📸', 'label': 'Feed', 'screen': 'feed'},
       {'icon': '🎁', 'label': 'Deal', 'screen': 'deals'},
     ];
 
@@ -1127,6 +1135,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
       return;
     }
+    if (screen == 'feed') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AdminFeedScreen()),
+      );
+      return;
+    }
     if (screen == 'deals') {
       Navigator.push(
         context,
@@ -1244,6 +1259,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         'label': context.tr('wishlist_insights'),
         'color': const Color(0xFFfa709a),
         'count': _wishlistInsightsCount,
+      },
+      {
+        'type': 'feed',
+        'icon': '📸',
+        'label': 'TURIVA Feed',
+        'color': const Color(0xFF9c27b0),
+        'count': _feedPostsCount,
       },
     ];
 
@@ -1381,6 +1403,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         break;
       case 'wishlist_insights':
         screen = const WishlistInsightsScreen();
+        break;
+      case 'feed':
+        screen = const AdminFeedScreen();
         break;
       // case 'Live Chats':
       //   screen = const AdminTurivaChatsScreen();

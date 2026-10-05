@@ -16,6 +16,13 @@ class NotificationModel {
   final DateTime? createdAt;
   final DateTime? readAt;
 
+  // ⭐ FEED FIELDS (mpya — kwa likes, comments, saves, shares)
+  final String postId;
+  final String postImageUrl;
+  final String fromUserId;
+  final String fromUserName;
+  final String fromUserAvatar;
+
   NotificationModel({
     required this.id,
     required this.userId,
@@ -31,6 +38,12 @@ class NotificationModel {
     this.isPushed = false,
     this.createdAt,
     this.readAt,
+    // ⭐ FEED FIELDS
+    this.postId = '',
+    this.postImageUrl = '',
+    this.fromUserId = '',
+    this.fromUserName = '',
+    this.fromUserAvatar = '',
   });
 
   factory NotificationModel.fromMap(Map<String, dynamic> map, String id) {
@@ -49,6 +62,12 @@ class NotificationModel {
       isPushed: map['isPushed'] ?? false,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       readAt: (map['readAt'] as Timestamp?)?.toDate(),
+      // ⭐ FEED FIELDS
+      postId: map['postId'] ?? '',
+      postImageUrl: map['postImageUrl'] ?? '',
+      fromUserId: map['fromUserId'] ?? '',
+      fromUserName: map['fromUserName'] ?? '',
+      fromUserAvatar: map['fromUserAvatar'] ?? '',
     );
   }
 
@@ -67,6 +86,12 @@ class NotificationModel {
       'isPushed': isPushed,
       'createdAt': createdAt ?? FieldValue.serverTimestamp(),
       'readAt': readAt != null ? Timestamp.fromDate(readAt!) : null,
+      // ⭐ FEED FIELDS
+      'postId': postId,
+      'postImageUrl': postImageUrl,
+      'fromUserId': fromUserId,
+      'fromUserName': fromUserName,
+      'fromUserAvatar': fromUserAvatar,
     };
   }
 

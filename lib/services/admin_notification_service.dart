@@ -137,13 +137,11 @@ class AdminNotificationService {
         .snapshots()
         .listen((snapshot) {
       if (isFirstLoad) {
-        // Store known IDs
         knownIds = snapshot.docs.map((d) => d.id).toSet();
         isFirstLoad = false;
         return;
       }
 
-      // Check for new notifications
       for (var doc in snapshot.docs) {
         if (!knownIds.contains(doc.id)) {
           knownIds.add(doc.id);
@@ -195,5 +193,74 @@ class AdminNotificationService {
       actionType: actionType,
       actionId: actionId,
     ));
+  }
+
+  // ═══════════════════════════════════════════
+  // ⭐ NEW — FEED NOTIFICATIONS (like, comment, save, share)
+  // ═══════════════════════════════════════════
+  Future<void> sendNotification({
+    required String toUserId,
+    required String fromUserId,
+    required String fromUserName,
+    required String fromUserAvatar,
+    required String type,          // 'like' | 'comment' | 'save' | 'share'
+    required String postId,
+    required String postImageUrl,
+    required String message,
+  }) async {
+    try {
+      if (toUserId == fromUserId) return;
+      if (toUserId.isEmpty) return;
+
+      // Chagua icon + category kulingana na type
+      String icon;
+      String category;
+      String title;
+      switch (type) {
+        case 'like':
+          icon = '❤️';
+          category = 'social';
+          title = 'New Like';
+          break;
+        case 'comment':
+          icon = '💬';
+          category = 'social';
+          title = 'New Comment';
+          break;
+        case 'save':
+          icon = '🔖';
+          category = 'social';
+          title = 'New Save';
+          break;
+        case 'share':
+          icon = '📤';
+          category = 'social';
+          title = 'New Share';
+          break;
+        default:
+          icon = '🔔';
+          category = 'info';
+          title = 'Notification';
+      }
+
+      await createNotification(NotificationModel(
+        id: '',
+        userId: toUserId,
+        title: title,
+        body: message,
+        type: type,
+        category: category,
+        icon: icon,
+        actionType: 'open_post',
+        actionId: postId,
+        postId: postId,
+        postImageUrl: postImageUrl,
+        fromUserId: fromUserId,
+        fromUserName: fromUserName,
+        fromUserAvatar: fromUserAvatar,
+      ));
+    } catch (e) {
+      print('🔥 sendNotification: $e');
+    }
   }
 }
