@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/dashboard_service.dart';
 import '../utils/colors.dart';
+import 'admin_comments_screen.dart';
 import 'admin_login_screen.dart';
 import 'destinations_list_screen.dart';
 import 'hotels_list_screen.dart';
@@ -36,6 +37,8 @@ import 'wishlist_insights_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'admin_feed_screen.dart';
 import '../services/feed_admin_service.dart';
+import 'admin_reports_screen.dart';
+import 'admin_feed_analytics_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -1267,6 +1270,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         'color': const Color(0xFF9c27b0),
         'count': _feedPostsCount,
       },
+      {
+        'type': 'feed_reports',
+        'icon': '🚩',
+        'label': 'Reports Queue',
+        'color': const Color(0xFFFF5722),
+        'count': 0,
+      },
+      {
+        'type': 'feed_analytics',
+        'icon': '📊',
+        'label': 'Feed Analytics',
+        'color': const Color(0xFF3F51B5),
+        'count': 0,
+      },
     ];
 
     final isDark = context.isDark;
@@ -1404,8 +1421,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 'wishlist_insights':
         screen = const WishlistInsightsScreen();
         break;
+      case 'feed_comments':
+        screen = const AdminCommentsScreen();
+        break;
       case 'feed':
         screen = const AdminFeedScreen();
+        break;
+      case 'feed_reports':
+        screen = const AdminReportsScreen();
+        break;
+      case 'feed_analytics':
+        screen = const AdminFeedAnalyticsScreen();
         break;
       // case 'Live Chats':
       //   screen = const AdminTurivaChatsScreen();

@@ -3,6 +3,7 @@ import '../models/feed_post_model.dart';
 import '../services/feed_admin_service.dart';
 import '../utils/colors.dart';
 import '../utils/theme_helper.dart';
+import 'package:video_player/video_player.dart';
 
 class AdminFeedScreen extends StatefulWidget {
   const AdminFeedScreen({super.key});
@@ -19,7 +20,7 @@ class _AdminFeedScreenState extends State<AdminFeedScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);  // ⭐ 3 → 4
   }
 
   @override
@@ -38,15 +39,25 @@ class _AdminFeedScreenState extends State<AdminFeedScreen>
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         title: const Text('TURIVA Feed — Moderation'),
+        actions: [
+          // ⭐ Analytics button
+          IconButton(
+            icon: const Icon(Icons.analytics_outlined),
+            tooltip: 'Feed Analytics',
+            onPressed: () => _showAnalytics(context, width),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.accentGold,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
+          isScrollable: true,  // ⭐ Scrollable kwa tabs 4
           tabs: const [
             Tab(text: 'All Posts', icon: Icon(Icons.dynamic_feed, size: 18)),
             Tab(text: 'Reported', icon: Icon(Icons.flag, size: 18)),
             Tab(text: 'Hidden', icon: Icon(Icons.visibility_off, size: 18)),
+            Tab(text: 'Top', icon: Icon(Icons.trending_up, size: 18)),  // ⭐ NEW
           ],
         ),
       ),
@@ -56,6 +67,7 @@ class _AdminFeedScreenState extends State<AdminFeedScreen>
           _buildPostList(_service.getAllPosts(), width, 'All Posts'),
           _buildPostList(_service.getReportedPosts(), width, 'Reported'),
           _buildPostList(_service.getHiddenPosts(), width, 'Hidden'),
+          _buildPostList(_service.getTopPosts(), width, 'Top Posts'),  // ⭐ NEW
         ],
       ),
     );
@@ -105,13 +117,13 @@ class _AdminFeedScreenState extends State<AdminFeedScreen>
         return ListView.builder(
           padding: EdgeInsets.all(width * 0.03),
           itemCount: posts.length,
-          itemBuilder: (context, i) => _buildPostCard(posts[i], width),
+          itemBuilder: (context, i) => _buildPostCard(posts[i], width, i),
         );
       },
     );
   }
 
-  Widget _buildPostCard(FeedPostModel post, double width) {
+  Widget _buildPostCard(FeedPostModel post, double width, int index) {
     return Container(
       margin: EdgeInsets.only(bottom: width * 0.03),
       padding: EdgeInsets.all(width * 0.03),
@@ -135,6 +147,33 @@ class _AdminFeedScreenState extends State<AdminFeedScreen>
           // ─── User + status row ───
           Row(
             children: [
+              // ⭐ Rank badge kwa Top 3 (kama ni Top tab)
+              if (_tabController.index == 3 && index < 3)
+                Container(
+                  margin: EdgeInsets.only(right: width * 0.02),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: width * 0.02,
+                    vertical: width * 0.008,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: index == 0
+                          ? [const Color(0xFFFFD700), const Color(0xFFFFA500)]
+                          : index == 1
+                          ? [const Color(0xFFC0C0C0), const Color(0xFF9E9E9E)]
+                          : [const Color(0xFFCD7F32), const Color(0xFF8B4513)],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '#${index + 1}',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: width * 0.03,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               CircleAvatar(
                 radius: width * 0.05,
                 backgroundColor: AppColors.accentGold,
@@ -188,16 +227,34 @@ class _AdminFeedScreenState extends State<AdminFeedScreen>
           if (post.imageUrl.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                post.imageUrl,
-                width: double.infinity,
-                height: width * 0.5,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  height: width * 0.5,
-                  color: Colors.grey.shade300,
-                  child: const Icon(Icons.broken_image, size: 40),
-                ),
+              child: Stack(
+                children: [
+                  Image.network(
+                    post.imageUrl,
+                    width: double.infinity,
+                    height: width * 0.5,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      height: width * 0.5,
+                      color: Colors.grey.shade300,
+                      child: const Icon(Icons.broken_image, size: 40),
+                    ),
+                  ),
+                  // ⭐ Video badge
+                  if (post.isVideo)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black26,
+                        child: const Center(
+                          child: Icon(
+                            Icons.play_circle_fill,
+                            color: Colors.white,
+                            size: 60,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
 
@@ -223,11 +280,15 @@ class _AdminFeedScreenState extends State<AdminFeedScreen>
                 Icon(Icons.location_on,
                     size: width * 0.035, color: context.textSecondary),
                 SizedBox(width: width * 0.01),
-                Text(
-                  post.location,
-                  style: TextStyle(
-                    fontSize: width * 0.03,
-                    color: context.textSecondary,
+                Expanded(
+                  child: Text(
+                    post.location,
+                    style: TextStyle(
+                      fontSize: width * 0.03,
+                      color: context.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -238,29 +299,104 @@ class _AdminFeedScreenState extends State<AdminFeedScreen>
           SizedBox(height: width * 0.025),
           Row(
             children: [
-              Icon(Icons.favorite,
-                  color: Colors.redAccent, size: width * 0.04),
+              // Likes
+              Icon(Icons.favorite, color: Colors.redAccent, size: width * 0.04),
               SizedBox(width: width * 0.01),
               Text('${post.likesCount}',
                   style: TextStyle(fontSize: width * 0.032)),
-              SizedBox(width: width * 0.04),
+
+              SizedBox(width: width * 0.035),
+
+              // Comments
               Icon(Icons.chat_bubble_outline,
                   color: Colors.grey, size: width * 0.04),
               SizedBox(width: width * 0.01),
               Text('${post.commentsCount}',
                   style: TextStyle(fontSize: width * 0.032)),
+
+              SizedBox(width: width * 0.035),
+
+              // ⭐ Views
+              Icon(Icons.visibility,
+                  color: Colors.blue, size: width * 0.04),
+              SizedBox(width: width * 0.01),
+              Text('${post.viewsCount}',
+                  style: TextStyle(fontSize: width * 0.032)),
+
+              SizedBox(width: width * 0.035),
+
+              // ⭐ Shares
+              Icon(Icons.share_outlined,
+                  color: Colors.purple, size: width * 0.04),
+              SizedBox(width: width * 0.01),
+              Text('${post.sharesCount}',
+                  style: TextStyle(fontSize: width * 0.032)),
+
               const Spacer(),
-              if (post.hiddenReason.isNotEmpty)
-                Text(
-                  'Reason: ${post.hiddenReason}',
-                  style: TextStyle(
-                    fontSize: width * 0.026,
-                    color: Colors.red,
-                    fontStyle: FontStyle.italic,
-                  ),
+
+              // Media type badge
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: width * 0.02,
+                  vertical: width * 0.008,
                 ),
+                decoration: BoxDecoration(
+                  color: (post.isVideo ? Colors.red : Colors.blue)
+                      .withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      post.isVideo ? Icons.videocam : Icons.image,
+                      size: width * 0.03,
+                      color: post.isVideo ? Colors.red : Colors.blue,
+                    ),
+                    SizedBox(width: width * 0.008),
+                    Text(
+                      post.isVideo ? 'VIDEO' : 'IMAGE',
+                      style: TextStyle(
+                        fontSize: width * 0.022,
+                        fontWeight: FontWeight.bold,
+                        color: post.isVideo ? Colors.red : Colors.blue,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
+
+          // ─── Hidden reason (kama ipo) ───
+          if (post.hiddenReason.isNotEmpty) ...[
+            SizedBox(height: width * 0.02),
+            Container(
+              padding: EdgeInsets.all(width * 0.02),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline,
+                      color: Colors.red, size: width * 0.035),
+                  SizedBox(width: width * 0.015),
+                  Expanded(
+                    child: Text(
+                      'Reason: ${post.hiddenReason}',
+                      style: TextStyle(
+                        fontSize: width * 0.026,
+                        color: Colors.red,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
 
           // ─── Actions ───
           SizedBox(height: width * 0.03),
@@ -296,7 +432,7 @@ class _AdminFeedScreenState extends State<AdminFeedScreen>
                   onTap: () => _hide(post),
                 ),
               ),
-              // Clear reports (only kama ina reports)
+              // Clear reports
               if (post.reportsCount > 0)
                 Expanded(
                   child: _actionBtn(
@@ -378,44 +514,162 @@ class _AdminFeedScreenState extends State<AdminFeedScreen>
       builder: (_) => Dialog(
         backgroundColor: Colors.black,
         insetPadding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (post.imageUrl.isNotEmpty)
-              Image.network(
-                post.imageUrl,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) =>
-                const Icon(Icons.broken_image, color: Colors.white),
-              ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    post.userName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (post.imageUrl.isNotEmpty)
+                Image.network(
+                  post.imageUrl,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.broken_image, color: Colors.white),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          post.userName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (post.isVideo)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'VIDEO',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                  ),
-                  if (post.caption.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      post.caption,
-                      style: const TextStyle(color: Colors.white70),
+                    if (post.caption.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        post.caption,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    // Stats
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _previewStat('❤️ ${post.likesCount}', 'Likes'),
+                        _previewStat('💬 ${post.commentsCount}', 'Comments'),
+                        _previewStat('👁️ ${post.viewsCount}', 'Views'),
+                        _previewStat('📤 ${post.sharesCount}', 'Shares'),
+                      ],
                     ),
                   ],
-                ],
+                ),
               ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close',
+                    style: TextStyle(color: AppColors.accentGold)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _previewStat(String value, String label) {
+    return Column(
+      children: [
+        Text(value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            )),
+        Text(label,
+            style: const TextStyle(color: Colors.white54, fontSize: 11)),
+      ],
+    );
+  }
+
+  // ⭐ Analytics dialog
+  void _showAnalytics(BuildContext context, double width) async {
+    final stats = await _service.getFeedStats();
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.analytics, color: AppColors.accentGold),
+            SizedBox(width: 8),
+            Text('Feed Analytics'),
           ],
         ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _analyticsRow('📸 Total Posts', '${stats['total'] ?? 0}'),
+              _analyticsRow('👁️ Total Views', '${stats['totalViews'] ?? 0}'),
+              _analyticsRow('❤️ Total Likes', '${stats['totalLikes'] ?? 0}'),
+              _analyticsRow(
+                  '💬 Total Comments', '${stats['totalComments'] ?? 0}'),
+              _analyticsRow(
+                  '📤 Total Shares', '${stats['totalShares'] ?? 0}'),
+              const Divider(),
+              _analyticsRow('🎥 Videos', '${stats['videos'] ?? 0}'),
+              _analyticsRow('📷 Images', '${stats['images'] ?? 0}'),
+              const Divider(),
+              _analyticsRow('🚫 Hidden', '${stats['hidden'] ?? 0}'),
+              _analyticsRow('⚠️ Reported', '${stats['reported'] ?? 0}'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _analyticsRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: AppColors.accentGold,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
